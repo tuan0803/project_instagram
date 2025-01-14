@@ -4,7 +4,7 @@
   },
   "name": "project_instagram",
   "version": "1.0.0",
-  "description": "",
+  "description": "npm init -y  npm install typescript -save-dev @types/node npm install --save-dev @tsconfig/node18",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
