@@ -1,0 +1,51 @@
+id,name,code,shortName,logo
+1,Ngân hàng TMCP Á Châu,ACB,ACB,https://vietqr.net/portal-service/resources/icons/ACB.png
+2,Ngân hàng TMCP Việt Nam Thịnh Vượng,VPB,VPBank,https://vietqr.net/portal-service/resources/icons/VPB.png
+3,Ngân hàng TMCP Quân đội,MB,MBBank,https://vietqr.net/portal-service/resources/icons/MB.png
+4,Ngân hàng TMCP Tiên Phong,TPB,TPBank,https://vietqr.net/portal-service/resources/icons/TPB.png
+5,Ngân hàng TMCP Hàng Hải,MSB,MSB,https://vietqr.net/portal-service/resources/icons/MSB.png
+6,Ngân hàng TMCP Nam Á,NAB,NamABank,https://vietqr.net/portal-service/resources/icons/NAB.png
+7,Ngân hàng TMCP Bưu Điện Liên Việt,LPB,LienVietPostBank,https://vietqr.net/portal-service/resources/icons/LPB.png
+8,Ngân hàng TMCP Ngoại Thương Việt Nam,VCB,Vietcombank,https://vietqr.net/portal-service/resources/icons/VCB.png
+9,Ngân hàng TMCP Công thương Việt Nam,ICB,VietinBank,https://vietqr.net/portal-service/resources/icons/ICB.png
+10,Ngân hàng TMCP Bản Việt,VCCB,Timo,https://vietqr.net/portal-service/resources/icons/VCCB.png
+11,Ngân hàng TMCP Đầu tư và Phát triển Việt Nam,BIDV,BIDV,https://vietqr.net/portal-service/resources/icons/BIDV.png
+12,Ngân hàng TMCP Sài Gòn Thương Tín,STB,Sacombank,https://vietqr.net/portal-service/resources/icons/STB.png
+13,Ngân hàng TMCP Đông Nam Á,SEAB,SeABank,https://vietqr.net/portal-service/resources/icons/SEAB.png
+14,Ngân hàng TMCP Quốc tế Việt Nam,VIB,VIB,https://vietqr.net/portal-service/resources/icons/VIB.png
+15,Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam,VBA,Agribank,https://vietqr.net/portal-service/resources/icons/VBA.png
+16,Ngân hàng TMCP Kỹ thương Việt Nam,TCB,Techcombank,https://vietqr.net/portal-service/resources/icons/TCB.png
+17,Ngân hàng TMCP Sài Gòn Công Thương,SGICB,SaigonBank,https://vietqr.net/portal-service/resources/icons/SGICB.png
+18,Ngân hàng TMCP Đông Á,DOB,DongABank,https://vietqr.net/portal-service/resources/icons/DOB.png
+19,Ngân hàng Thương mại TNHH MTV Dầu Khí Toàn Cầu,GPB,GPBank,https://vietqr.net/portal-service/resources/icons/GPB.png
+20,Ngân hàng TMCP Bắc Á,BAB,BacABank,https://vietqr.net/portal-service/resources/icons/BAB.png
+21,Ngân hàng TNHH MTV Standard Chartered Bank Việt Nam,SCVN,StandardChartered,https://vietqr.net/portal-service/resources/icons/SCVN.png
+22,Ngân hàng TMCP Đại Chúng Việt Nam,PVCB,PVcomBank,https://vietqr.net/portal-service/resources/icons/PVCB.png
+23,Ngân hàng Thương mại TNHH MTV Đại Dương,Oceanbank,Oceanbank,https://vietqr.net/portal-service/resources/icons/Oceanbank.png
+24,Ngân hàng TMCP Quốc Dân,NCB,NCB,https://vietqr.net/portal-service/resources/icons/NCB.png
+25,Ngân hàng Liên doanh Việt - Nga,VRB,VRB,https://vietqr.net/portal-service/resources/icons/VRB.png
+26,Ngân hàng TNHH MTV Shinhan Việt Nam,SHBVN,ShinhanBank,https://vietqr.net/portal-service/resources/icons/SHBVN.png
+27,Ngân hàng TMCP An Bình,ABB,ABBANK,https://vietqr.net/portal-service/resources/icons/ABB.png
+28,Ngân hàng TMCP Việt Á,VAB,VietABank,https://vietqr.net/portal-service/resources/icons/VAB.png
+29,Ngân hàng TMCP Sài Gòn,SCB,SCB,https://vietqr.net/portal-service/resources/icons/SCB.png
+30,Ngân hàng TMCP Xăng dầu Petrolimex,PGB,PGBank,https://vietqr.net/portal-service/resources/icons/PGB.png
+31,Ngân hàng TMCP Xuất Nhập khẩu Việt Nam,EIB,Eximbank,https://vietqr.net/portal-service/resources/icons/EIB.png
+32,Ngân hàng TMCP Việt Nam Thương Tín,VIETBANK,VietBank,https://vietqr.net/portal-service/resources/icons/VIETBANK.png
+33,Ngân hàng TNHH Indovina,IVB,IndovinaBank,https://vietqr.net/portal-service/resources/icons/IVB.png
+34,Ngân hàng TMCP Phát triển Thành phố Hồ Chí Minh,HDB,HDBank,https://vietqr.net/portal-service/resources/icons/HDB.png
+35,Ngân hàng TMCP Bảo Việt,BVB,BaoVietBank,https://vietqr.net/portal-service/resources/icons/BVB.png
+36,Ngân hàng TNHH MTV Public Việt Nam,PBVN,PublicBank,https://vietqr.net/portal-service/resources/icons/PBVN.png
+37,Ngân hàng TMCP Sài Gòn - Hà Nội,SHB,SHB,https://vietqr.net/portal-service/resources/icons/SHB.png
+38,Ngân hàng Thương mại TNHH MTV Xây dựng Việt Nam,CBB,CBBank,https://vietqr.net/portal-service/resources/icons/CBB.png
+39,Ngân hàng TMCP Phương Đông,OCB,OCB,https://vietqr.net/portal-service/resources/icons/OCB.png
+40,Ngân hàng TMCP Kiên Long,KLB,KienLongBank,https://vietqr.net/portal-service/resources/icons/KLB.png
+41,Ngân hàng TNHH MTV CIMB Việt Nam,CIMB,CIMB,https://vietqr.net/portal-service/resources/icons/CIMB.png
+42,Ngân hàng TNHH MTV HSBC (Việt Nam),HSBC,HSBC,https://vietqr.net/portal-service/resources/icons/HSBC.png
+43,DBS Bank Ltd - Chi nhánh Thành phố Hồ Chí Minh,DBS,DBSBank,https://vietqr.net/portal-service/resources/icons/DBS.png
+44,Ngân hàng Nonghyup - Chi nhánh Hà Nội,NHB HN,Nonghyup,https://vietqr.net/portal-service/resources/icons/NHB%20HN.png
+45,Ngân hàng TNHH MTV Hong Leong Việt Nam,HLBVN,HongLeong,https://vietqr.net/portal-service/resources/icons/HLBVN.png
+46,Ngân hàng Công nghiệp Hàn Quốc - Chi nhánh Hà Nội,IBK - HN,IBK Bank Hà Nội,https://vietqr.net/portal-service/resources/icons/IBK.png
+47,Ngân hàng Công nghiệp Hàn Quốc - Chi nhánh TP. Hồ Chí Minh,IBK - HCM,IBK Bank Hồ Chí Minh,https://vietqr.net/portal-service/resources/icons/IBK.png
+48,Ngân hàng TNHH MTV Woori Việt Nam,WVN,Woori,https://vietqr.net/portal-service/resources/icons/WVN.png
+49,Ngân hàng United Overseas - Chi nhánh TP. Hồ Chí Minh,UOB,United Overseas,https://vietqr.net/portal-service/resources/icons/UOB.png
+50,Ngân hàng Kookmin – Chi nhánh Hà Nội,KBHN,Kookmin,https://vietqr.net/portal-service/resources/icons/KB.png

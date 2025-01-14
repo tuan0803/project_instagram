@@ -1,9 +1,15 @@
-npm init -y 
-npm install typescript -save-dev @types/node
-npm install --save-dev @tsconfig/node18
+# VINACO recruiment service
+- Install packages:
+  `yarn`
+- Build:
+  `yarn build`
+- Startup:
+  `yarn start`
+- Create database:
+  `npx sequelize-cli db:create`
+- Generate new migration:
+  `npx sequelize-cli migration:create --name [name]`
+- Run migration:
+  `npx sequelize-cli db:migrate`
 
 
-
-
-//thư viện
-npm install --save-dev  @types/express @types/body-parser @types/cors @types/jsonwebtoken @types/bcrypt sequelize dotenv @types/joi
