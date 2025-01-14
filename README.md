@@ -1,4 +1,6 @@
-
+npm init -y 
+npm install typescript -save-dev @types/node
+npm install --save-dev @tsconfig/node18
 
 
 
