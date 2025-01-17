@@ -1,5 +1,5 @@
 import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
-import TokenEntity from '@entities/token';
+import TokenEntity from '@entities/tokens';
 import TokenInterface from '@interfaces/tokens';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
