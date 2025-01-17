@@ -1,6 +1,6 @@
 import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
+import TokenInterface from '@interfaces/tokens';
 import TokenEntity from '@entities/tokens';
-import TokenInterface from '@entities/tokens';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
 class TokenModel extends Model<TokenInterface> implements TokenInterface {
