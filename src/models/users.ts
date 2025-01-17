@@ -1,6 +1,6 @@
 import { Model, Sequelize, ModelValidateOptions, ModelScopeOptions, Op } from 'sequelize';
-import UserEntity from '@entities/users';
-import UserInterface from '@interfaces/users';
+import UserEntity from '@entities/user';
+import UserInterface from '@interfaces/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
@@ -124,6 +124,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             timestamps: true,
             createdAt: 'created_at',
             updatedAt: 'updated_at',
+            
         })
     }
 

@@ -2,8 +2,8 @@ import express from 'express';
 import Register from './Register';
 import Login from './Login';
 import User from './User';
-import checkToken from '@middlewares/checkToken';
-import { requireAuth } from '@middlewares/authorization';
+import checkToken from '@middlewares/checkTokens';
+import { requireAuth } from '@middlewares/authorizations';
 const router = express.Router();
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
