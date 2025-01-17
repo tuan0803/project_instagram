@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
-import UserModel from '@models/users';
+import UserModel from '@models/Users';
 
 class UserController {
     public async index(req: Request, res: Response) {
