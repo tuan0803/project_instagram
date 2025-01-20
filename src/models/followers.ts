@@ -2,7 +2,7 @@ import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
 import FollowerEntity from '@entities/followers';
 import FollowerInterface from '@interfaces/followers';
 import NotificationModel from '@models/notifications';
-// import { ModelHooks } from 'sequelize/types/lib/hooks';
+// import { ModelHooks } from 'sequelize/types/lib/hook';
 
 class FollowerModel extends Model<FollowerInterface> implements FollowerInterface {
   public id: number;
@@ -45,18 +45,18 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
 
   public static initialize (sequelize: Sequelize) {
     this.init(FollowerEntity, {
-      hooks: {
-        async beforeCreate (follower) {
+      hooks:{
+        async beforeCreate(follower){
           const existingFollower = await FollowerModel.scope([
-            { method: ['byFollowerAndFollowee', follower.followerId, follower.followeeId] },
+            {method : ['byFollowerAndFollowee', follower.followerId, follower.followeeId]},
           ]).findOne();
-          if (existingFollower) {
-            throw new Error('Bạn đã theo dõi người này');
+          if(existingFollower){
+            throw new Error ('Bạn đã theo dõi người này');
           }
         },
-        async afterCreate (follower) {
+        async afterCreate(follower){
           const mockUser = {
-            name: 'Test User',
+            name : "Test User",
           };
           await NotificationModel.create({
             userId: follower.followerId,
@@ -66,7 +66,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
             shortContent: `${mockUser.name} đã gửi yêu cầu theo dõi bạn.`,
             content: `Người dùng ${mockUser.name} muốn theo dõi bạn.`,
           });
-        },
+        }
       },
 
       scopes: FollowerModel.scopes,
