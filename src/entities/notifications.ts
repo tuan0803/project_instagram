@@ -66,6 +66,8 @@ const NotificationEntity = {
       return this.getDataValue('updatedAt') ? DateTimeUtil.dateToMs(this.getDataValue('updatedAt')) : null;
     },
   },
+  timestamps: false,
+
 };
 
 export default NotificationEntity;
