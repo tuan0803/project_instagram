@@ -1,8 +1,9 @@
 import { Router } from 'express';
+import PostRouter from '@controllers/api/Posts';
 // import UserRoute from './Users';
 
 const router = Router();
 
-// router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
+router.post('/posts', PostRouter.create);
 
 export default router;
