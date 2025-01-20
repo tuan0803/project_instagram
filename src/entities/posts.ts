@@ -10,7 +10,7 @@ const PostEntity = {
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'user_id',
   },
   text: {
@@ -20,7 +20,7 @@ const PostEntity = {
   },
   createdAt: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
     field: 'created_at',
     get (): number {
       return this.getDataValue('created_at') ? DateTimeUtil.dateToMs(this.getDataValue('created_at')) : null;
@@ -28,7 +28,7 @@ const PostEntity = {
   },
   updatedAt: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
     field: 'updated_at',
     get (): number {
       return this.getDataValue('updated_at')
@@ -38,12 +38,12 @@ const PostEntity = {
   },
   commentCount: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'comment_count',
   },
   reactionCount: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'reaction_count',
   },
 };
