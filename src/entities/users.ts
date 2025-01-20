@@ -44,28 +44,41 @@ const UserEntity = {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  phone_number: {
+  phoneNumber: {
     type: DataTypes.NUMBER,
     allowNull: true,
     unique: true,
     validate: {
       isNumeric: true,
     },
+    field: 'phone_number',
   },
-  avatar_url: {
+  avatarUrl: {
     type: DataTypes.TEXT,
     allowNull: true,
+    field: 'avatar_url',
   },
-  is_private: {
+  isPrivate: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false,
+    field: 'is_private',
   },
-  created_at: {
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'is_active',
+  },
+  firstLoginDate: {
+    type: DataTypes.DATE,
+    field: 'first_login_date',
+  },
+  createdAt: {
     type: DataTypes.DATE,
     field: 'created_at',
   },
-  updated_at: {
+  updatedAt: {
     type: DataTypes.DATE,
     field: 'updated_at',
   },

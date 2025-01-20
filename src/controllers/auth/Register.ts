@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import UserModel from '@models/users';
 import { sendSuccess, sendError } from '@libs/response';
-
-
 class registerController {
     public async register(req: Request, res: Response) {
         try {
@@ -14,6 +12,4 @@ class registerController {
         }
     }
 }
-
-
 export default new registerController();

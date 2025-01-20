@@ -12,30 +12,24 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     public email: string;
     public password: string;
     public bio: string;
-    public phone_number: number;
-    public avatar_url: string;
-    public is_private: boolean;
-    public created_at: Date;
-    public updated_at: Date;
+    public phoneNumber: number;
+    public avatarUrl: string;
+    public isPrivate: boolean;
+    public isActive: boolean;
+    public firstLoginDate: Date;
+    public createdAt: Date;
+    public updatedAt: Date;
 
     static readonly CREATABLE_PARAMETERS = ['email', 'password', 'name'];
     static readonly UPDATABLE_PARAMETERS = ['name', 'bio', 'avatar_url'];
 
     static readonly hooks: Partial<ModelHooks<UserModel>> = {
         async beforeSave(record) {
-            if (record.email) {
-                const existedEmail = await UserModel.findOne({ where: { email: record.email } });
-                if (existedEmail && existedEmail.id !== record.id) {
-                    throw new Error('Email already exists!');
-                }
-            }
-
             if (record.password && record.password !== record.previous('password')) {
                 const salt = bcrypt.genSaltSync();
                 record.password = bcrypt.hashSync(record.password, salt);
             }
         },
-        
     };
 
     static readonly scopes: ModelScopeOptions = {
@@ -67,14 +61,14 @@ class UserModel extends Model<UserInterface> implements UserInterface {
                 throw new Error('Invalid email format!');
             }
         },
-    };
-
-    public static async findByEmail(email: string) {
-        return await this.findOne({ where: { email } });
-    };
-
-    public static async findById(id: number) {
-        return await this.findOne({ where: { id } });
+        async isEmailUnique() {
+            if (this.email) {
+                const existedEmail = await UserModel.findOne({ where: { email: this.email } });
+                if (existedEmail && existedEmail.id !== this.id) {
+                    throw new Error('Email already exists!');
+                }
+            }
+        },
     };
 
     public toJSON() {
@@ -83,7 +77,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
         return values;
     }
 
-    public static generate(user: UserModel) {
+    public static generateAccessToken(user: UserModel) {
         const accessToken = jwt.sign(
             { 
                 userId: user.id,

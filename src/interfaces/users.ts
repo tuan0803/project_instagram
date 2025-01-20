@@ -4,11 +4,13 @@ interface UserInterface {
     email: string;
     password: string;
     bio: string;
-    phone_number: number;
-    avatar_url: string;
-    is_private: boolean;
-    created_at?: Date;
-    updated_at?: Date;
+    phoneNumber: number;
+    avatarUrl: string;
+    isPrivate: boolean;
+    isActive: boolean;
+    firstLoginDate: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 };
 
 export default UserInterface;
