@@ -10,14 +10,11 @@ class ActiveController {
         try {
             const user = await UserModel.scope([{ method: ['byEmail', email] }]).findOne();
 
-            if (!user || !(await user.validPassword(password))) {
-                return sendError(res, 401, 'Invalid email or password');
+            if (!user || !(await user.validPassword(password) || !user.isActive)) {
+                return sendError(res, 404, { isSuccess: false });
             }
-            if (!user.isActive) {
-                await user.sendMailActive();
-                return sendSuccess(res, { isSuccess: true });
-            }
-            return sendError(res, 400, { isSuccess: false });
+            await user.sendMailActive();
+            return sendSuccess(res, { isSuccess: true });
         } catch (error) {
             sendError(res, 500, error.message, error);
         }
@@ -29,16 +26,14 @@ class ActiveController {
             return sendError(res, 400, 'Code is required');
         }
         try {
-            const user = await UserModel.findOne({
-                where: { verificationCode: code },
-            });
+            const user = await UserModel.scope([{ method: ['byVerificationCode', code ] }]).findOne();
     
             if (!user) {
-                throw new Error('Invalid verification code.');
+                return sendError(res, 404, 'User not found');
             }
     
             if (new Date() > user.verificationCodeExpiry) {
-                throw new Error('Verification code expired.');
+                return sendError(res, 400, 'Code has expired');
             }
     
             user.isActive = true;
