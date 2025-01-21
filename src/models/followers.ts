@@ -3,7 +3,7 @@ import FollowerEntity from '@entities/followers';
 import FollowerInterface from '@interfaces/followers';
 import NotificationModel from '@models/notifications';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
-
+import UserModel from '@models/users';
 class FollowerModel extends Model<FollowerInterface> implements FollowerInterface {
   public id: number;
   public followerId: number;
@@ -34,17 +34,15 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
       
     },
     async afterCreate(follower) {
-      const mockUser = {
-        name: 'Test User',
-      };
+      const followerUser = await UserModel.findByPk(follower.followerId);
 
       await NotificationModel.create({
         userId: follower.followerId,
         notifiableType: 'follow_request',
         notifiableId: follower.id,
         title: 'Yêu cầu theo dõi mới',
-        shortContent: `${mockUser.name} đã gửi yêu cầu theo dõi bạn.`,
-        content: `Người dùng ${mockUser.name} muốn theo dõi bạn.`,
+        shortContent: `${followerUser.name} đã gửi yêu cầu theo dõi bạn.`,
+        content: `Người dùng ${followerUser.name} muốn theo dõi bạn.`,
       });
     },
   };
