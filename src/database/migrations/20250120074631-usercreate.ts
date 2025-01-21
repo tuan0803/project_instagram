@@ -48,6 +48,14 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      verification_code: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      verification_code_expiry: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
