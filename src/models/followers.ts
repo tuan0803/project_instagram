@@ -2,7 +2,7 @@ import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
 import FollowerEntity from '@entities/followers';
 import FollowerInterface from '@interfaces/followers';
 import NotificationModel from '@models/notifications';
-// import { ModelHooks } from 'sequelize/types/lib/hook';
+import { ModelHooks } from 'sequelize/types/lib/hooks';
 
 class FollowerModel extends Model<FollowerInterface> implements FollowerInterface {
   public id: number;
@@ -11,72 +11,65 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   public isApproved: boolean;
   public createdAt?: Date;
 
-  // static readonly hooks: Partial<ModelHooks<FollowerModel>>
   static readonly scopes: ModelScopeOptions = {
-    byId (id) {
-      return {
-        where: { id },
-      };
+    byId(id) {
+      return { where: { id } };
     },
-    byFollower (followerId) {
-      return {
-        where: { followerId },
-      };
+    byFollower(followerId) {
+      return { where: { followerId } };
     },
-    byFollowee (followeeId) {
-      return {
-        where: { followeeId },
-      };
+    byFollowee(followeeId) {
+      return { where: { followeeId } };
     },
-    isApproved () {
-      return {
-        where: { isApproved: true },
-      };
+    isApproved() {
+      return { where: { isApproved: true } };
     },
-    byFollowerAndFollowee (followerId: number, followeeId: number) {
-      return {
-        where: {
-          followerId,
-          followeeId,
-        },
-      };
+    byFollowerAndFollowee(followerId: number, followeeId: number) {
+      return { where: { followerId, followeeId } };
     },
   };
 
-  public static initialize (sequelize: Sequelize) {
-    this.init(FollowerEntity, {
-      hooks:{
-        async beforeCreate(follower){
-          const existingFollower = await FollowerModel.scope([
-            {method : ['byFollowerAndFollowee', follower.followerId, follower.followeeId]},
-          ]).findOne();
-          if(existingFollower){
-            throw new Error ('Bạn đã theo dõi người này');
-          }
-        },
-        async afterCreate(follower){
-          const mockUser = {
-            name : "Test User",
-          };
-          await NotificationModel.create({
-            userId: follower.followerId,
-            notifiableType: 'follow_request',
-            notifiableId: follower.id,
-            title: 'Yêu cầu theo dõi mới',
-            shortContent: `${mockUser.name} đã gửi yêu cầu theo dõi bạn.`,
-            content: `Người dùng ${mockUser.name} muốn theo dõi bạn.`,
-          });
-        }
-      },
+  static readonly hooks: Partial<ModelHooks<FollowerModel>> = {
+    async beforeCreate(follower) {
+      
+    },
+    async afterCreate(follower) {
+      const mockUser = {
+        name: 'Test User',
+      };
 
+      await NotificationModel.create({
+        userId: follower.followerId,
+        notifiableType: 'follow_request',
+        notifiableId: follower.id,
+        title: 'Yêu cầu theo dõi mới',
+        shortContent: `${mockUser.name} đã gửi yêu cầu theo dõi bạn.`,
+        content: `Người dùng ${mockUser.name} muốn theo dõi bạn.`,
+      });
+    },
+  };
+
+  public static initialize(sequelize: Sequelize) {
+    this.init(FollowerEntity, {
+      hooks: FollowerModel.hooks,
       scopes: FollowerModel.scopes,
-      tableName: 'followers',
       sequelize,
+      tableName: 'followers',
     });
   }
 
-  public static associate () {
+  public static associate() {
+   
+  }
 
+  public static async validateFollowRequest(followerId: number, followeeId: number) {
+    const existingFollower = await FollowerModel.scope([
+      { method: ['byFollowerAndFollowee', followerId, followeeId] },
+    ]).findOne();
+
+    if (existingFollower) {
+      throw new Error('Bạn đã theo dõi người này');
+    }
   }
 }
 
