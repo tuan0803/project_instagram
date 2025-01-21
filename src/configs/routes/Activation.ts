@@ -1,5 +1,5 @@
 import express from 'express';
-import ActiveController from '@controllers/auth/Active';
+import ActiveController from '@controllers/auth/Activation';
 
 const router = express.Router();
 

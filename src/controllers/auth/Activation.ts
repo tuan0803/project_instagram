@@ -13,8 +13,11 @@ class ActiveController {
             if (!user || !(await user.validPassword(password))) {
                 return sendError(res, 401, 'Invalid email or password');
             }
-            await user.sendMailActive();
-            sendSuccess(res, { }, 'Gửi mã xác thực thành công.');
+            if (!user.isActive) {
+                await user.sendMailActive();
+                return sendSuccess(res, { isSuccess: true });
+            }
+            return sendError(res, 400, { isSuccess: false });
         } catch (error) {
             sendError(res, 500, error.message, error);
         }
@@ -26,8 +29,23 @@ class ActiveController {
             return sendError(res, 400, 'Code is required');
         }
         try {
-            await UserModel.activateAccount(code);
-            sendSuccess(res, { }, 'Kích hoạt tài khoản thành công.');
+            const user = await UserModel.findOne({
+                where: { verificationCode: code },
+            });
+    
+            if (!user) {
+                throw new Error('Invalid verification code.');
+            }
+    
+            if (new Date() > user.verificationCodeExpiry) {
+                throw new Error('Verification code expired.');
+            }
+    
+            user.isActive = true;
+            user.verificationCode = null;
+            user.verificationCodeExpiry = new Date();
+            await user.save();
+            return sendSuccess(res, { isSuccess: true });
         } catch (error) {
             sendError(res, 500, error.message, error);
         }
