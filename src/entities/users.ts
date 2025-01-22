@@ -74,6 +74,14 @@ const UserEntity = {
     type: DataTypes.DATE,
     field: 'first_login_date',
   },
+  verificationCode: {
+    type: DataTypes.STRING,
+    field: 'verification_code',
+  },
+  verificationCodeExpiry: {
+    type: DataTypes.DATE,
+    field: 'verification_code_expiry',
+  },
   createdAt: {
     type: DataTypes.DATE,
     field: 'created_at',
