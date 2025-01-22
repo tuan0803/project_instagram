@@ -3,14 +3,12 @@ import UserModel from '@models/users';
 import { sendSuccess, sendError } from '@libs/response';
 class ActiveController {
     public async create(req: Request, res: Response) {
-        const { email, password } = req.fields;
-        if (!email || !password) {
-            return sendError(res, 400, 'Email and password are required');
-        }
+        const { id } = req.fields;
+        
         try {
-            const user = await UserModel.scope([{ method: ['byEmail', email] }]).findOne();
+            const user = await UserModel.findByPk(id);
 
-            if (!user || !(await user.validPassword(password) || !user.isActive)) {
+            if (!user || user.isActive) {
                 return sendError(res, 404, { isSuccess: false });
             }
             await user.sendMailActive();

@@ -58,6 +58,16 @@ class UserModel extends Model<UserInterface> implements UserInterface {
                 },
             };
         },
+        byVerificationCode(code) {
+            return {
+                where: {
+                    verificationCode: code,
+                    verificationCodeExpiry: {
+                        [Op.gt]: new Date(),
+                    },
+                },
+            };
+        },
     };
 
     static readonly validations: ModelValidateOptions = {
@@ -137,25 +147,6 @@ class UserModel extends Model<UserInterface> implements UserInterface {
         } catch (error) {
             return false;
         }
-    }
-
-    public static async activateAccount(code: string): Promise<void> {
-        const user = await UserModel.findOne({
-            where: { verificationCode: code },
-        });
-
-        if (!user) {
-            throw new Error('Invalid verification code.');
-        }
-
-        if (new Date() > user.verificationCodeExpiry) {
-            throw new Error('Verification code expired.');
-        }
-
-        user.isActive = true;
-        user.verificationCode = null;
-        user.verificationCodeExpiry = new Date();
-        await user.save();
     }
 
     public static initialize(sequelize: Sequelize) {
