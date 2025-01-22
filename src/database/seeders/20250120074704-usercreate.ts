@@ -12,6 +12,8 @@ module.exports = {
       is_private: false,
       is_active: false,
       first_login_date: new Date(),
+      verificationCode: '123abc',
+      verification_code_expiry: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
     }], {});

@@ -9,6 +9,8 @@ interface UserInterface {
     isPrivate: boolean;
     isActive: boolean;
     firstLoginDate: Date;
+    verificationCode: string;
+    verificationCodeExpiry: Date;
     createdAt?: Date;
     updatedAt?: Date;
 };
