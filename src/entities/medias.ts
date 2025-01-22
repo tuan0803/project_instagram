@@ -22,7 +22,6 @@ const MediaEntity = {
     allowNull: true,
     field: 'type',
   },
-  timestamps: false,
 };
 
 export default MediaEntity;

@@ -10,22 +10,25 @@ const ReactionEntity = {
   },
   postId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'post_id',
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'user_id',
   },
   type: {
     type: DataTypes.STRING(255),
     allowNull: true,
     field: 'type',
+    validate: {
+      isIn: [['like']],
+    },
   },
   createdAt: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
     field: 'created_at',
     get (): number {
       return this.getDataValue('created_at')
@@ -33,6 +36,5 @@ const ReactionEntity = {
         : null;
     },
   },
-  timestamps: false,
 };
 export default ReactionEntity;

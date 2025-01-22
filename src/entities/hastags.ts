@@ -12,7 +12,6 @@ const HastagEntity = {
     allowNull: false,
     field: 'name',
   },
-  timestamps: false,
 };
 
 export default HastagEntity;

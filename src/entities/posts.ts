@@ -36,15 +36,5 @@ const PostEntity = {
         : null;
     },
   },
-  commentCount: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'comment_count',
-  },
-  reactionCount: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'reaction_count',
-  },
 };
 export default PostEntity;

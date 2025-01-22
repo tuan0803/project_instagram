@@ -1,8 +1,8 @@
 interface MediaInterface {
   id: number;
   postId: number;
-  url: string;
-  type: string;
+  url?: string;
+  type?: string;
 }
 interface MediaCreationAttributes extends Omit<MediaInterface, 'id'> { }
 

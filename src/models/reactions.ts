@@ -7,8 +7,8 @@ class ReactionModel extends Model<ReactionInterface, ReactionCreationAttributes>
   public id: number;
   public postId: number;
   public userId: number;
-  public type: string;
-  public createdAt?: Date;
+  public type?: string;
+  public createdAt: Date;
 
   static readonly NOTIFIABLE_TYPE_ENUM = {
     SYSTEM: 'system',

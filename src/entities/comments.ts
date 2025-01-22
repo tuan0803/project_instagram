@@ -38,7 +38,6 @@ const commentEntity = {
         : null;
     },
   },
-  timestamps: false,
 };
 
 export default commentEntity;

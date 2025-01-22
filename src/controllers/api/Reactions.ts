@@ -1,17 +1,21 @@
-import ReactionsModel from '@models/reactions';
-import ReactionInterface from '@interfaces/reactions';
+import { sendError, sendSuccess } from '@libs/response';
+import { Request, Response } from 'express';
 
 class ReactionController {
-  public static async handleReactions (postId: number, reactions: ReactionInterface[] | undefined) {
-    if (reactions && reactions.length > 0) {
-      const reactionPromises = reactions.map(async (reaction) => {
-        const [reactionRecord] = await ReactionsModel.findOrCreate({
-          where: { postId: postId, userId: reaction.userId, type: reaction.type },
-          defaults: { postId: postId, userId: reaction.userId, type: reaction.type },
-        });
-        return reactionRecord;
-      });
-      await Promise.all(reactionPromises);
+  static readonly REACTIONS = [
+    'like', // Thích
+  ];
+
+  public async create (req: Request, res: Response) {
+    try {
+      const { userId, postId } = req.params;
+      const { type } = req.body;
+      if (!ReactionController.REACTIONS.includes(type)) {
+        return sendError(res, 400, 'không hợp lệ');
+      }
+      sendSuccess(res, { userId, postId, type }, 'Thành công');
+    } catch (error) {
+      sendError(res, 500, 'Lỗi', error.message || error);
     }
   }
 }
