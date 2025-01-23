@@ -1,5 +1,5 @@
 interface NotificationInterface {
-  id: number;
+  id?: number;
   userId: number;
   deviceToken?: string;
   notifiableType: string;

@@ -15,11 +15,11 @@ process.env.TZ = 'Asia/Bangkok';
 const port = process.env.PORT || 3000;
 const app = express();
 app.use(compression());
-// app.use(express.json());
+app.use(express.json());
 app.use(express.urlencoded({
   extended: true,
 }));
-app.use(formidable());
+// app.use(formidable());
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use(cors());
