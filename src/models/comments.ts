@@ -15,23 +15,23 @@ class CommentModel extends Model<CommentInterface, CommentCreationAttributes> im
   };
 
   static readonly scopes: ModelScopeOptions = {
-    byId(id) {
+    byId (id) {
       return {
         where: { id },
       };
     },
   };
 
-  public static initialize(sequelize: Sequelize) {
+  public static initialize (sequelize: Sequelize) {
     this.init(CommentEntity, {
       tableName: 'comments',
       sequelize,
-      timestamps: false, 
+      timestamps: false,
       modelName: 'Comment',
     });
   }
 
-  public static associate() {
+  public static associate () {
   }
 }
 

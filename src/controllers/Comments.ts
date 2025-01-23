@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
-import CommentInterface, { CommentCreationAttributes } from '@interfaces/comments';
+import { CommentCreationAttributes } from '@interfaces/comments';
 
 class CommentController {
-  public async getComments (req: Request, res: Response) { 
+  public async getComments (req: Request, res: Response) {
     try {
       const { postId } = req.params;
       const { page = 1, limit = 15 } = req.query;

@@ -33,9 +33,9 @@ class PostModel extends Model<PostInterface, PostCreationAttributes> implements 
   public static initialize (sequelize: Sequelize) {
     this.init(PostEntity, {
       hooks: PostModel.hooks,
-      tableName: 'posts',
       sequelize,
       timestamps: false,
+      tableName: 'posts',
     });
   }
 
