@@ -6,11 +6,9 @@ import { ModelHooks } from 'sequelize/types/lib/hooks';
 class PostModel extends Model<PostInterface, PostCreationAttributes> implements PostInterface {
   public id: number;
   public userId: number;
-  public text: string;
-  public createdAt?: Date;
-  public updatedAt?: Date;
-  public commentCount: number;
-  public reactionCount: number;
+  public text?: string;
+  public createdAt: Date;
+  public updatedAt: Date;
 
   static readonly NOTIFIABLE_TYPE_ENUM = {
     SYSTEM: 'system',
@@ -18,8 +16,6 @@ class PostModel extends Model<PostInterface, PostCreationAttributes> implements 
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async beforeCreate (record) {
-      record.commentCount = record.commentCount || 0;
-      record.reactionCount = record.reactionCount || 0;
     },
     async afterCreate (record) {
       console.log('Done post:', record);
@@ -37,9 +33,9 @@ class PostModel extends Model<PostInterface, PostCreationAttributes> implements 
   public static initialize (sequelize: Sequelize) {
     this.init(PostEntity, {
       hooks: PostModel.hooks,
-      tableName: 'posts',
       sequelize,
-      timestamps: true,
+      timestamps: false,
+      tableName: 'posts',
     });
   }
 
