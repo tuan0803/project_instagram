@@ -1,7 +1,7 @@
 import { Model, Sequelize, ModelValidateOptions, ModelScopeOptions, Op } from 'sequelize';
 import UserEntity from '@entities/users';
 import UserInterface from '@interfaces/users';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import Settings from '@configs/settings';
