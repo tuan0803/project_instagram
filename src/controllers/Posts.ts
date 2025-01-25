@@ -1,9 +1,13 @@
+import multer from 'multer';
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
-import PostService from '@services/Posts';
+import PostService from '@controllers/api/Posts';
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 class PostController {
-  public async getAllPosts(req: Request, res: Response) {
+  public async getAllPosts (req: Request, res: Response) {
     try {
       const { userId } = req.params;
       const { page = 1, limit = 24 } = req.query;
@@ -12,23 +16,32 @@ class PostController {
 
       return sendSuccess(res, posts, 'Lấy danh sách bài viết thành công');
     } catch (error) {
-      return sendError(res, 400, 'Lỗi khi lấy danh sách bài viết !!', error.message || error);
+      return sendError(res, 400, 'Lỗi lấy danh sách bài viết !!', error.message || error);
     }
   }
 
-  public async create(req: Request, res: Response) {
+  public async create (req: Request, res: Response) {
     try {
       const userId = Number(req.params.userId);
       const { text } = req.body;
-      const newPost = await PostService.create(userId, text);
+      upload.single('image')(req, res, async (err) => {
+        if (err) {
+          return sendError(res, 500, 'Lỗi upload ', err.message || err);
+        }
 
-      return sendSuccess(res, newPost, 'Tạo bài viết thành công');
+        const imageBuffer = req.file?.buffer;
+        const originalName = req.file?.originalname;
+
+        const newPost = await PostService.create(userId, text, imageBuffer, originalName);
+
+        return sendSuccess(res, newPost, 'Tạo bài viết thành công');
+      });
     } catch (error) {
       return sendError(res, 500, 'Lỗi khi tạo bài viết', error.message || error);
     }
   }
 
-  public async update(req: Request, res: Response) {
+  public async update (req: Request, res: Response) {
     try {
       const { postId } = req.params;
       const { text } = req.body;
@@ -40,7 +53,7 @@ class PostController {
     }
   }
 
-  public async delete(req: Request, res: Response) {
+  public async delete (req: Request, res: Response) {
     try {
       const { postId } = req.params;
       await PostService.delete(Number(postId));

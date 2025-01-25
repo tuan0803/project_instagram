@@ -36,5 +36,6 @@ const PostEntity = {
         : null;
     },
   },
+
 };
 export default PostEntity;

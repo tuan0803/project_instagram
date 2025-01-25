@@ -6,7 +6,7 @@ import { ModelHooks } from 'sequelize/types/lib/hooks';
 class MediaModel extends Model<MediaInterface, MediaCreationAttributes> implements MediaInterface {
   public id: number;
   public postId: number;
-  public url?: string;
+  public url: string;
   public type?: string;
 
   static readonly NOTIFIABLE_TYPE_ENUM = {

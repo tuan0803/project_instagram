@@ -1,6 +1,7 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
 import PostEntity from '@entities/posts';
 import PostInterface, { PostCreationAttributes } from '@interfaces/posts';
+import MediaModel from '@models/medias'; // Đảm bảo import đúng MediaModel
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
 class PostModel extends Model<PostInterface, PostCreationAttributes> implements PostInterface {
@@ -16,6 +17,7 @@ class PostModel extends Model<PostInterface, PostCreationAttributes> implements 
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async beforeCreate (record) {
+      // Thực hiện trước khi tạo bản ghi, có thể thêm logic xử lý
     },
     async afterCreate (record) {
       console.log('Done post:', record);
@@ -34,12 +36,20 @@ class PostModel extends Model<PostInterface, PostCreationAttributes> implements 
     this.init(PostEntity, {
       hooks: PostModel.hooks,
       sequelize,
-      timestamps: false,
       tableName: 'posts',
+      timestamps: false,
     });
   }
 
   public static associate () {
+    PostModel.hasMany(MediaModel, {
+      foreignKey: 'postId',
+      as: 'media',
+    });
+    MediaModel.belongsTo(PostModel, {
+      foreignKey: 'postId',
+      as: 'post',
+    });
   }
 }
 
