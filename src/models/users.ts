@@ -1,10 +1,11 @@
 import { Model, Sequelize, ModelValidateOptions, ModelScopeOptions, Op } from 'sequelize';
 import UserEntity from '@entities/users';
 import UserInterface from '@interfaces/users';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import Settings from '@configs/settings';
+import MailActive from '@services/mailer';
 
 class UserModel extends Model<UserInterface> implements UserInterface {
     public id: number;
@@ -16,12 +17,14 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     public avatarUrl: string;
     public isPrivate: boolean;
     public isActive: boolean;
+    public verificationCode: string;
+    public verificationCodeExpiry: Date;
     public firstLoginDate: Date;
     public createdAt: Date;
     public updatedAt: Date;
 
     static readonly CREATABLE_PARAMETERS = ['email', 'password', 'name'];
-    static readonly UPDATABLE_PARAMETERS = ['name', 'bio', 'avatar_url'];
+    static readonly UPDATABLE_PARAMETERS = ['name', 'bio', 'avatar_url', 'phone_number'];
 
     static readonly hooks: Partial<ModelHooks<UserModel>> = {
         async beforeSave(record) {
@@ -30,30 +33,42 @@ class UserModel extends Model<UserInterface> implements UserInterface {
                 record.password = bcrypt.hashSync(record.password, salt);
             }
         },
+        async afterCreate(record) {
+            record.sendMailActive();
+        },
     };
 
     static readonly scopes: ModelScopeOptions = {
-        byId (id) {
+        byId(id) {
             return {
-                where: { id }
-            }
+                where: { id },
+            };
         },
-        byEmail (email) {
+        byEmail(email) {
             return {
-                where: { email }
-            }
+                where: { email },
+            };
         },
-        byName (name) {
+        byName(name) {
             return {
                 where: {
                     name: {
-                        [Op.like]: `%${name}%`, 
+                        [Op.like]: `%${name}%`,
                     },
                 },
-            }
-        }
-
-    }
+            };
+        },
+        byVerificationCode(code) {
+            return {
+                where: {
+                    verificationCode: code,
+                    verificationCodeExpiry: {
+                        [Op.gt]: new Date(),
+                    },
+                },
+            };
+        },
+    };
 
     static readonly validations: ModelValidateOptions = {
         isValidEmail() {
@@ -71,26 +86,53 @@ class UserModel extends Model<UserInterface> implements UserInterface {
         },
     };
 
-    public toJSON() {
-        const values = { ...this.get() };
-        delete values.password; 
-        return values;
+    public static async generateVerificationCode(): Promise<string> {
+        let code = '';
+        const codeLength = 32; 
+        const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        for (let i = 0; i < codeLength; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            code += characters[randomIndex];
+        }
+        const existedRecord = await UserModel.findOne({
+            attributes: ['verificationCode'],
+            where: { verificationCode: code },
+        });
+        if (existedRecord) return UserModel.generateVerificationCode();
+        return code;
     }
 
-    public static generateAccessToken(user: UserModel) {
+    public async sendMailActive() {
+        const verificationCode = await UserModel.generateVerificationCode();
+        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); 
+        const { email } = this;
+        await UserModel.update(
+            { verificationCode, verificationCodeExpiry },
+            { where: { email } }
+        );
+
+        const activationLink = `${Settings.frontendUrl}/active/verify?code=${verificationCode}`;
+        await MailActive(
+            email,
+            'Account Activation',
+            `<p>Please activate your account: ${this.name}</p><a href="${activationLink}">${activationLink}</a>`
+        );
+    }
+
+    public async generateToken() {
         const accessToken = jwt.sign(
-            { 
-                userId: user.id,
-                userEmail: user.email
+            {
+                userId: this.id,
+                userEmail: this.email,
             },
             Settings.jwtSecret,
             { expiresIn: Settings.access_ttl }
         );
 
         const refreshToken = jwt.sign(
-            { 
-                id: user.id,
-                email: user.email
+            {
+                id: this.id,
+                email: this.email,
             },
             Settings.jwtRefreshSecret,
             { expiresIn: Settings.refresh_ttl }
@@ -107,8 +149,8 @@ class UserModel extends Model<UserInterface> implements UserInterface {
         }
     }
 
-    public static initialize (sequelize: Sequelize) {
-        this.init( UserEntity, {
+    public static initialize(sequelize: Sequelize) {
+        this.init(UserEntity, {
             hooks: UserModel.hooks,
             scopes: UserModel.scopes,
             validate: UserModel.validations,
@@ -118,14 +160,19 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             timestamps: true,
             createdAt: 'created_at',
             updatedAt: 'updated_at',
-            
-        })
+        });
     }
 
     public static associate() {
        
     }
 
+    public toJSON() {
+        const values = { ...this.get() };
+        delete values.password;
+        delete values.verificationCode;  
+        return values;
+    }
 }
 
 export default UserModel;
