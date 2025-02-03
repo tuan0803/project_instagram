@@ -1,4 +1,4 @@
-import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
+import { Model, ModelScopeOptions, ModelValidateOptions, Sequelize } from 'sequelize';
 import FollowerEntity from '@entities/followers';
 import FollowerInterface from '@interfaces/followers';
 import NotificationModel from '@models/notifications';
@@ -11,6 +11,9 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   public followeeId: number;
   public isApproved: boolean;
   public createdAt?: Date;
+
+  static readonly CREATABLE_PARAMETERS = ['followerId', 'followeeId', 'isApproved'];
+  static readonly UPDATABLE_PARAMETERS = ['isApproved'];
 
   static readonly scopes: ModelScopeOptions = {
     byId(id) {
@@ -31,57 +34,73 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   };
 
   static readonly hooks: Partial<ModelHooks<FollowerModel>> = {
-    async beforeCreate(follower) {
-
-    },
-    async afterCreate(follower) {
+    async afterCreate(follower: FollowerModel) {
       const followerUser = await UserModel.findByPk(follower.followerId);
-    if(!follower.isApproved){
-      await NotificationModel.create({
-        userId: follower.followeeId,
-        notifiableType: 'follow_request',
-        notifiableId: follower.id,
-        title: 'Yêu cầu theo dõi mới',
-        shortContent: `${followerUser.name} đã gửi yêu cầu theo dõi bạn.`,
-        content: `Người dùng ${followerUser.name} muốn theo dõi bạn.`,
-      });
-    } else {
-      await NotificationModel.create({
-        userId: follower.followeeId,
-        notifiableType: 'follow',
-        notifiableId: follower.id,
-        title: 'Yêu cầu theo dõi mới',
-        shortContent: `${followerUser.name} đã theo dõi bạn.`,
-        content: `Người dùng ${followerUser.name} đã theo dõi bạn.`,
-      });
-    }
+      if (!follower.isApproved) {
+        await NotificationModel.sendFollowRequest(followerUser, follower.followeeId, follower.id);
+      } else {
+        await NotificationModel.sendFollow(followerUser, follower.followeeId, follower.id);
+      }
     },
-    async afterUpdate(follower) {
+
+    async afterUpdate(follower: FollowerModel) {
       if (follower.changed('isApproved') && follower.isApproved) {
         const [followerUser, followeeUser] = await Promise.all([
           UserModel.findByPk(follower.followerId),
           UserModel.findByPk(follower.followeeId),
         ]);
-        if (!followerUser || !followeeUser) return;
-
-        await NotificationModel.create({
-          userId: follower.followerId,
-          notifiableType: 'follow_approve',
-          notifiableId: follower.id,
-          title: 'Yêu cầu theo dõi đã được phê duyệt',
-          shortContent: `${followeeUser.name} đã chấp nhận yêu cầu theo dõi của bạn.`,
-          content: `Người dùng ${followeeUser.name} đã chấp nhận yêu cầu theo dõi của bạn.`,
-        });
+        if (followerUser && followeeUser) {
+          await NotificationModel.sendFollowApprove(followerUser, followeeUser, follower.id);
+        }
       }
     },
   };
 
+  static readonly validations: ModelValidateOptions = {
+    async isFollowerExist() {
+      const user = await UserModel.findByPk(this.followerId);
+      if (!user) throw Forbidden;
+    },
+    async isFolloweeExist() {
+      const user = await UserModel.findByPk(this.followeeId);
+      if (!user) throw AccountIsNotVerified;
+    },
+  };
+  public static async validateFollowRequest(followerId: number, followeeId: number) {
+    await FollowerModel.checkUserExist(followerId, Forbidden);
+    await FollowerModel.checkUserExist(followeeId, AccountIsNotVerified);
+    await FollowerModel.checkExistingFollow(followerId, followeeId);
+  }
+  private static async checkExistingFollow(followerId: number, followeeId: number) {
+    const existingFollow = await FollowerModel.scope([
+      { method: ['byFollowerAndFollowee', followerId, followeeId] },
+    ]).findOne();
+
+    if (existingFollow) {
+      if (existingFollow.isApproved) {
+        throw InvalidOtp;
+      } else {
+        throw AccountIsNotVerified;
+      }
+    }
+  }
+
+  private static async checkUserExist(userId: number, errorType: any) {
+    const user = await UserModel.findByPk(userId);
+    if (!user) {
+      throw errorType;
+    }
+  }
   public static initialize(sequelize: Sequelize) {
     this.init(FollowerEntity, {
       hooks: FollowerModel.hooks,
       scopes: FollowerModel.scopes,
+      validate: FollowerModel.validations,
       sequelize,
       tableName: 'followers',
+      modelName: 'follower',
+      timestamps: true,
+      createdAt: 'created_at',
     });
   }
 
@@ -89,40 +108,40 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
 
   }
 
-  public static async validateFollowRequest(followerId: number, followeeId: number) {
+  // public static async validateFollowRequest(followerId: number, followeeId: number) {
     
-      const [followerUser, followeeUser] = await Promise.all([
-        UserModel.findByPk(followerId),
-        UserModel.findByPk(followeeId),
-      ]);
+  //     const [followerUser, followeeUser] = await Promise.all([
+  //       UserModel.findByPk(followerId),
+  //       UserModel.findByPk(followeeId),
+  //     ]);
   
-      if (!followerUser) {
-        const error: any = new Error();
-        error.errorCode = Forbidden.errorCode; 
-        throw error;
-      }
+  //     if (!followerUser) {
+  //       const error: any = new Error();
+  //       error.errorCode = Forbidden.errorCode; 
+  //       throw error;
+  //     }
   
-      if (!followeeUser) {
-        const error: any = new Error();
-        error.errorCode = AccountIsNotVerified.errorCode;
-        throw error;
-      }
+  //     if (!followeeUser) {
+  //       const error: any = new Error();
+  //       error.errorCode = AccountIsNotVerified.errorCode;
+  //       throw error;
+  //     }
   
-      const existingFollower = await FollowerModel.scope([
-        { method: ['byFollowerAndFollowee', followerId, followeeId] },
-      ]).findOne();
+  //     const existingFollower = await FollowerModel.scope([
+  //       { method: ['byFollowerAndFollowee', followerId, followeeId] },
+  //     ]).findOne();
   
-      if (existingFollower) {
-        const error: any = new Error();
-        if (existingFollower.isApproved) {
-          error.errorCode = InvalidOtp.errorCode;
-        } else {
-          error.errorCode = AccountIsNotVerified.errorCode;
-        }
-        throw error;
-      }
+  //     if (existingFollower) {
+  //       const error: any = new Error();
+  //       if (existingFollower.isApproved) {
+  //         error.errorCode = InvalidOtp.errorCode;
+  //       } else {
+  //         error.errorCode = AccountIsNotVerified.errorCode;
+  //       }
+  //       throw error;
+  //     }
     
-    }
+  //   }
   }
 
 export default FollowerModel;
