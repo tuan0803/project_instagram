@@ -19,15 +19,13 @@ class FollowerController {
       const newFollow = await FollowerModel.create({
         followerId,
         followeeId,
-        isApproved: false,
+        isApproved: !targetUser.isPrivate,
       });
-      if (!targetUser.isPrivate) {
-        await newFollow.update({ isApproved: true });
-        return sendSuccess(res, { item: newFollow }, 'Bắt đầu theo dõi người dùng này.');
-      }
-      return sendSuccess(res, {item: newFollow}, 'Tài khoản Private, cần đợi xác nhận');
+      
+        return sendSuccess(res, { item: newFollow });
+
     } catch (error) {
-      sendError(res, 500, error.message, error);
+      sendError(res, 500, {errorCode : 131}, error);
     }
   }
 }
