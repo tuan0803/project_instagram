@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import UserModel from '@models/users';
 import { sendSuccess, sendError } from '@libs/response';
-import { NoData } from '@libs/errors';
+import { NoData, InternalError } from '@libs/errors';
+
 class ActiveController {
     public async create(req: Request, res: Response) {
         const { id } = req.fields;
@@ -15,13 +16,12 @@ class ActiveController {
             await user.sendMailActive();
             return sendSuccess(res, { isSuccess: true });
         } catch (error) {
-            sendError(res, 500, error.message, error);
+            sendError(res, 500, InternalError, error);
         }
     }
 
     public async verify(req: Request, res: Response) {
         const { code } = req.query;
- 
         try {
             const user = await UserModel.scope([{ method: ['byVerificationCode', code ] }]).findOne();
     
@@ -35,9 +35,9 @@ class ActiveController {
             await user.save();
             return sendSuccess(res, { isSuccess: true });
         } catch (error) {
-            sendError(res, 500, error.message, error);
+            sendError(res, 500, InternalError, error);
         }
     }
-
 }
+
 export default new ActiveController();
