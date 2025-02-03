@@ -1,10 +1,12 @@
 import { Router } from 'express';
 // import UserRoute from './Users';
 import Register from './Register';
+import FollowerRoutes from './FollowerRoutes';
 const router = Router();
 import Active from './Activation';
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
+router.use('/followers', FollowerRoutes);
 router.use('/active', Active);
 export default router;
