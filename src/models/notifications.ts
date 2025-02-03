@@ -62,6 +62,39 @@ class NotificationModel extends Model<NotificationInterface> implements Notifica
 
   public static associate () {
   }
+  public static async sendFollow(followerUser: any, followeeId: number, followerId: number) {
+    return await NotificationModel.create({
+      userId: followeeId,
+      notifiableType: 'follow',
+      notifiableId: followerId,
+      title: 'Yêu cầu theo dõi mới',
+      shortContent: `${followerUser.name} đã theo dõi bạn.`,
+      content: `Người dùng ${followerUser.name} đã theo dõi bạn.`,
+    });
+  }
+  
+  public static async sendFollowRequest(followerUser: any, followeeId: number, followerId: number) {
+    return await NotificationModel.create({
+      userId: followeeId,
+      notifiableType: 'follow_request',
+      notifiableId: followerId,
+      title: 'Yêu cầu theo dõi mới',
+      shortContent: `${followerUser.name} đã gửi yêu cầu theo dõi bạn.`,
+      content: `Người dùng ${followerUser.name} muốn theo dõi bạn.`,
+    });
+  }
+  
+  public static async sendFollowApprove(followerUser: any, followeeUser: any, followerId: number) {
+    return await NotificationModel.create({
+      userId: followerId,
+      notifiableType: 'follow_approve',
+      notifiableId: followerId,
+      title: 'Yêu cầu theo dõi đã được phê duyệt',
+      shortContent: `${followeeUser.name} đã chấp nhận yêu cầu theo dõi của bạn.`,
+      content: `Người dùng ${followeeUser.name} đã chấp nhận yêu cầu theo dõi của bạn.`,
+    });
+  }
+  
 }
 
 export default NotificationModel;
