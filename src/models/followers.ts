@@ -108,40 +108,6 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
 
   }
 
-  // public static async validateFollowRequest(followerId: number, followeeId: number) {
-    
-  //     const [followerUser, followeeUser] = await Promise.all([
-  //       UserModel.findByPk(followerId),
-  //       UserModel.findByPk(followeeId),
-  //     ]);
-  
-  //     if (!followerUser) {
-  //       const error: any = new Error();
-  //       error.errorCode = Forbidden.errorCode; 
-  //       throw error;
-  //     }
-  
-  //     if (!followeeUser) {
-  //       const error: any = new Error();
-  //       error.errorCode = AccountIsNotVerified.errorCode;
-  //       throw error;
-  //     }
-  
-  //     const existingFollower = await FollowerModel.scope([
-  //       { method: ['byFollowerAndFollowee', followerId, followeeId] },
-  //     ]).findOne();
-  
-  //     if (existingFollower) {
-  //       const error: any = new Error();
-  //       if (existingFollower.isApproved) {
-  //         error.errorCode = InvalidOtp.errorCode;
-  //       } else {
-  //         error.errorCode = AccountIsNotVerified.errorCode;
-  //       }
-  //       throw error;
-  //     }
-    
-  //   }
   }
 
 export default FollowerModel;
