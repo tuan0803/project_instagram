@@ -1,22 +1,22 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
 import PostEntity from '@entities/posts';
-import PostInterface, { PostCreationAttributes } from '@interfaces/posts';
+import PostInterface from '@interfaces/posts';
+import MediaModel from '@models/medias';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
-class PostModel extends Model<PostInterface, PostCreationAttributes> implements PostInterface {
+class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
   public userId: number;
   public text?: string;
   public createdAt: Date;
   public updatedAt: Date;
 
-  static readonly NOTIFIABLE_TYPE_ENUM = {
-    SYSTEM: 'system',
-  };
+  static readonly CREATABLE = ['userId', 'text'];
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async beforeCreate (record) {
     },
+
     async afterCreate (record) {
       console.log('Done post:', record);
     },
@@ -34,12 +34,20 @@ class PostModel extends Model<PostInterface, PostCreationAttributes> implements 
     this.init(PostEntity, {
       hooks: PostModel.hooks,
       sequelize,
-      timestamps: false,
       tableName: 'posts',
+      timestamps: false,
     });
   }
 
   public static associate () {
+    PostModel.hasMany(MediaModel, {
+      foreignKey: 'postId',
+      as: 'media',
+    });
+    MediaModel.belongsTo(PostModel, {
+      foreignKey: 'postId',
+      as: 'post',
+    });
   }
 }
 
