@@ -3,6 +3,7 @@ import HastagEntity from '@entities/hastags';
 import HastagInterface from '@interfaces/hashtags';
 
 class HastagModel extends Model<HastagInterface> implements HastagInterface {
+  public id: number;
   public name: string;
 
   static readonly CREATABLE = ['name'];
@@ -17,7 +18,7 @@ class HastagModel extends Model<HastagInterface> implements HastagInterface {
 
   public static initialize(sequelize: Sequelize) {
     this.init(HastagEntity, {
-      tableName: 'hastags',
+      tableName: 'hashtags',
       sequelize,
       timestamps: false,
     });
