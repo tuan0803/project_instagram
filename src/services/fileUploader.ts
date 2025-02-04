@@ -17,6 +17,9 @@ class FileUploaderService {
 
   private static localUpload (buffer: Buffer, fileName: string) {
     const uploadFolder = path.join(path.resolve('./'), 'public', 'upload');
+    if (!fs.existsSync(uploadFolder)) {
+      fs.mkdirSync(uploadFolder, { recursive: true });
+  }
     fs.writeFileSync(path.join(uploadFolder, fileName), buffer);
     return path.join(uploadFolder, fileName);
   }
