@@ -2,30 +2,10 @@
 import { Request, Response } from 'express';
 import UserModel from '@models/users';
 import { sendSuccess, sendError } from '@libs/response';
-import TokenService from '@services/token.service';
 import { BadAuthentication, InternalError } from '@libs/errors';
     
 class LoginController {
-    // private createTokens = (user: any) => {
-    //     const accessToken = jwt.sign(
-    //         { userId: user.id },
-    //         Settings.jwtSecret,
-    //         { expiresIn: '1h' }
-    //     );
-
-    //     const refreshToken = jwt.sign(
-    //         { userId: user.id },
-    //         Settings.jwtRefreshSecret,
-    //         { expiresIn: '7d' }
-    //     );
-
-    //     return { accessToken, refreshToken };
-    // };
-
     public async login(req: Request, res: Response) {
-        if (!req.fields || !req.fields.email || !req.fields.password) {
-            return sendError(res, 400, BadAuthentication);
-        }
         const { email, password } = req.fields;
         
         try {
@@ -34,32 +14,22 @@ class LoginController {
             if (!user || !(await user.validPassword(password))) {
                 return sendError(res, 401, BadAuthentication);
             }
-    
-            if (!user.isActive) {
-                return sendSuccess(res, {
-                    isSuccess: true,
-                    user: {
-                        id: user.id,
-                        email: user.email,
-                        isActive: user.isActive,
-                    },
-                    message: 'Account is not activated. Please verify your email.',
-                });
+            let accessToken = null;
+            let refreshToken = null;
+            if (user.isActive) {
+                const tokens = await user.generateToken();
+                accessToken = tokens.accessToken;
+                refreshToken = tokens.refreshToken;
             }
-    
-            const tokens = await user.generateToken();
-            await TokenService.createTokens(user.id, tokens.accessToken, tokens.refreshToken);
-            res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true, secure: true });
-    
             return sendSuccess(res, {
                 isSuccess: true,
-                accessToken: tokens.accessToken,
-                refreshToken: tokens.refreshToken,
+                accessToken,
+                refreshToken,
                 user: {
                     id: user.id,
                     email: user.email,
-                    isActive: user.isActive,
-                },
+                     isActive: user.isActive,
+                },  
             });
         } catch (error: any) {
             console.error('Login Error:', error);
