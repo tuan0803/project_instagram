@@ -1,66 +1,28 @@
-import multer from 'multer';
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
-import PostService from '@controllers/api/Posts';
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+import PostModel from '@models/posts';
+import MediaController from '@controllers/Medias';
 
 class PostController {
-  public async getAllPosts (req: Request, res: Response) {
+  public async create(req: Request, res: Response) {
     try {
-      const { userId } = req.params;
-      const { page = 1, limit = 24 } = req.query;
-
-      const posts = await PostService.getAllPosts(Number(userId), Number(page), Number(limit));
-
-      return sendSuccess(res, posts, 'Lấy danh sách bài viết thành công');
+      const mediaBuffer = req.files?.media;
+      if (!mediaBuffer || (mediaBuffer.size === 0)) {
+        return sendError(res, 400, 'Media is required to create post');
+      } else {
+        const userId = req.params.userId;
+        const text = req.body.text;
+        const value = PostModel.CREATABLE.reduce((acc: any, field: string) => {
+          if (field === 'userId') acc[field] = userId;
+          if (field === 'text') acc[field] = text;
+          return acc;
+        }, {});
+        const newPost = await PostModel.create(value);
+        await MediaController.create(newPost.userId, newPost.id, mediaBuffer);
+        return sendSuccess(res, newPost, 'Post created successfully');
+      }
     } catch (error) {
-      return sendError(res, 400, 'Lỗi lấy danh sách bài viết !!', error.message || error);
-    }
-  }
-
-  public async create (req: Request, res: Response) {
-    try {
-      const userId = Number(req.params.userId);
-      const { text } = req.body;
-      upload.single('image')(req, res, async (err) => {
-        if (err) {
-          return sendError(res, 500, 'Lỗi upload ', err.message || err);
-        }
-
-        const imageBuffer = req.file?.buffer;
-        const originalName = req.file?.originalname;
-
-        const newPost = await PostService.create(userId, text, imageBuffer, originalName);
-
-        return sendSuccess(res, newPost, 'Tạo bài viết thành công');
-      });
-    } catch (error) {
-      return sendError(res, 500, 'Lỗi khi tạo bài viết', error.message || error);
-    }
-  }
-
-  public async update (req: Request, res: Response) {
-    try {
-      const { postId } = req.params;
-      const { text } = req.body;
-      const updatedPost = await PostService.update(Number(postId), String(text));
-
-      return sendSuccess(res, updatedPost, 'Cập nhật bài viết thành công');
-    } catch (error) {
-      return sendError(res, 500, 'Lỗi khi cập nhật bài viết', error.message || error);
-    }
-  }
-
-  public async delete (req: Request, res: Response) {
-    try {
-      const { postId } = req.params;
-      await PostService.delete(Number(postId));
-
-      return sendSuccess(res, null, 'Xóa bài viết thành công');
-    } catch (error) {
-      return sendError(res, 500, 'Lỗi khi xóa bài viết', error.message || error);
+      return sendError(res, 500, 'Error creating post', error.message || error);
     }
   }
 }

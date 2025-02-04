@@ -1,10 +1,7 @@
 interface MediaInterface {
-  id: number;
   postId: number;
   url: string;
-  type?: string;
+  type?: 'image' | 'video';
 }
-interface MediaCreationAttributes extends Omit<MediaInterface, 'id'> { }
 
-export { MediaCreationAttributes };
 export default MediaInterface;

@@ -15,30 +15,31 @@ class ReactionModel extends Model<ReactionInterface, ReactionCreationAttributes>
   };
 
   static readonly hooks: Partial<ModelHooks<ReactionModel>> = {
-    async beforeCreate (record) {
+    async beforeCreate(record) {
     },
-    async afterCreate (record) {
+    async afterCreate(record) {
       console.log('Done hashtag:', record);
     },
   };
 
   static readonly scopes: ModelScopeOptions = {
-    byname (name) {
+    byname(name) {
       return {
         where: { name: name },
       };
     },
   };
 
-  public static initialize (sequelize: Sequelize) {
+  public static initialize(sequelize: Sequelize) {
     this.init(ReactionEntity, {
       hooks: ReactionModel.hooks,
       tableName: 'reaction',
       sequelize,
+      timestamps: false,
     });
   }
 
-  public static associate () {
+  public static associate() {
   }
 }
 

@@ -1,32 +1,30 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
 import HastagEntity from '@entities/hastags';
-import HastagInterface, { HashtagCreationAttributes } from '@interfaces/hashtags';
+import HastagInterface from '@interfaces/hashtags';
 
-class HastagModel extends Model<HastagInterface, HashtagCreationAttributes> implements HastagInterface {
-    public id: number;
-    public name: string;
+class HastagModel extends Model<HastagInterface> implements HastagInterface {
+  public name: string;
 
-    static readonly NOTIFIABLE_TYPE_ENUM = {
-      SYSTEM: 'system',
-    };
+  static readonly CREATABLE = ['name'];
 
-    static readonly scopes: ModelScopeOptions = {
-      byname (name) {
-        return {
-          where: { name: name },
-        };
-      },
-    };
+  static readonly scopes: ModelScopeOptions = {
+    byname(name) {
+      return {
+        where: { name: name },
+      };
+    },
+  };
 
-    public static initialize (sequelize: Sequelize) {
-      this.init(HastagEntity, {
-        tableName: 'hastags',
-        sequelize,
-      });
-    }
+  public static initialize(sequelize: Sequelize) {
+    this.init(HastagEntity, {
+      tableName: 'hastags',
+      sequelize,
+      timestamps: false,
+    });
+  }
 
-    public static associate () {
-    }
+  public static associate() {
+  }
 }
 
 export default HastagModel;

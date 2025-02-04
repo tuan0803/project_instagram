@@ -1,20 +1,28 @@
+import { Request, Response } from 'express';
 import HashtagsModel from '@models/hashtags';
-import HashtagInterface from '@interfaces/hashtags';
 
 class HashtagController {
-  public static async handleHashtags (postId: number, hashtags: HashtagInterface[] | undefined) {
-    if (hashtags && hashtags.length > 0) {
-      const hashtagPromises = hashtags.map(async (hashtag) => {
-        const [hashtagRecord] = await HashtagsModel.findOrCreate({
-          where: { name: hashtag.name },
-          defaults: { name: hashtag.name },
-        });
+  public async create(req: Request, res: Response) {
+    try {
+      const { name } = req.body;
 
-        return hashtagRecord;
-      });
-      await Promise.all(hashtagPromises);
+      if (!name || name.trim() === '') {
+        return res.status(400).json({ error: 'Hashtag name is required' });
+      }
+
+      const existingHashtag = await HashtagsModel.findOne({ where: { name } });
+      if (existingHashtag) {
+        return res.status(409).json({ error: 'Hashtag already exists' });
+      }
+
+      const newHashtag = await HashtagsModel.create({ name });
+
+      return res.status(201).json(newHashtag);
+    } catch (error) {
+      console.error('Error creating hashtag:', error);
+      return res.status(500).json({ error: 'Server error while creating hashtag' });
     }
   }
 }
 
-export default HashtagController;
+export default new HashtagController();

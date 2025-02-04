@@ -1,5 +1,6 @@
 import { DateTimeUtil } from '@libs/datetime';
 import { DataTypes } from 'sequelize';
+import { toDefaultValue } from 'sequelize/types/lib/utils';
 
 const PostEntity = {
   id: {
@@ -21,20 +22,14 @@ const PostEntity = {
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: DataTypes.NOW,
     field: 'created_at',
-    get (): number {
-      return this.getDataValue('created_at') ? DateTimeUtil.dateToMs(this.getDataValue('created_at')) : null;
-    },
   },
   updatedAt: {
     type: DataTypes.DATE,
     allowNull: false,
+    defaultValue: DataTypes.NOW,
     field: 'updated_at',
-    get (): number {
-      return this.getDataValue('updated_at')
-        ? DateTimeUtil.dateToMs(this.getDataValue('updated_at'))
-        : null;
-    },
   },
 
 };
