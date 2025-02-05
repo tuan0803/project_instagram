@@ -95,7 +95,9 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   private static async checkUserExist(userId: number, errorType: any) {
     const user = await UserModel.findByPk(userId);
     if (!user) {
-      throw errorType;
+      throw new ValidationError('Validation Error', [
+        new ValidationErrorItem(`Người dùng với ID ${userId} không tồn tại!`, 'Validation Error', 'userId', String(userId))
+      ]);
     }
   }
   public static initialize(sequelize: Sequelize) {
