@@ -74,7 +74,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
       }
     },
   };
-  private static async checkExistingFollow(followerId: number, followeeId: number) {
+  public static async checkExistingFollow(followerId: number, followeeId: number) {
     const existingFollow = await FollowerModel.scope([
       { method: ['byFollowerAndFollowee', followerId, followeeId] },
     ]).findOne();

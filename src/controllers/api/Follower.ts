@@ -15,7 +15,7 @@ class FollowerController {
       if (!targetUser) {
         return sendError(res, 404, NoData.message);
       }
-      await FollowerModel.validateFollowRequest(followerId, followeeId);
+      await FollowerModel.checkExistingFollow(followerId, followeeId);
       const newFollow = await FollowerModel.create({
         followerId,
         followeeId,
