@@ -1,4 +1,4 @@
-import { Model, ModelScopeOptions, ModelValidateOptions, Sequelize } from 'sequelize';
+import { Model, ModelScopeOptions, ModelValidateOptions, Sequelize, ValidationError, ValidationErrorItem } from 'sequelize';
 import FollowerEntity from '@entities/followers';
 import FollowerInterface from '@interfaces/followers';
 import NotificationModel from '@models/notifications';
@@ -59,18 +59,21 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   static readonly validations: ModelValidateOptions = {
     async isFollowerExist() {
       const user = await UserModel.findByPk(this.followerId);
-      if (!user) throw Forbidden;
+      if (!user) {
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem('Follower không tồn tại!', 'Validation error', 'followerId', this.followerId)
+        ]);
+      }
     },
     async isFolloweeExist() {
       const user = await UserModel.findByPk(this.followeeId);
-      if (!user) throw AccountIsNotVerified;
+      if (!user) {
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem('Followee không tồn tại!', 'Validation error', 'followeeId', this.followeeId)
+        ]);
+      }
     },
   };
-  public static async validateFollowRequest(followerId: number, followeeId: number) {
-    await FollowerModel.checkUserExist(followerId, Forbidden);
-    await FollowerModel.checkUserExist(followeeId, AccountIsNotVerified);
-    await FollowerModel.checkExistingFollow(followerId, followeeId);
-  }
   private static async checkExistingFollow(followerId: number, followeeId: number) {
     const existingFollow = await FollowerModel.scope([
       { method: ['byFollowerAndFollowee', followerId, followeeId] },
@@ -78,9 +81,13 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
 
     if (existingFollow) {
       if (existingFollow.isApproved) {
-        throw InvalidOtp;
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem('Đã tồn tại mối quan hệ follow!', 'Validation error', 'followeeId', String(followeeId))
+        ]);
       } else {
-        throw AccountIsNotVerified;
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem('Yêu cầu follow đang chờ phê duyệt!', 'Validation error', 'followeeId', String(followeeId))
+        ]);
       }
     }
   }
