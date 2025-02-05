@@ -1,36 +1,40 @@
 import { DateTimeUtil } from '@libs/datetime';
 import { DataTypes } from 'sequelize';
-import { toDefaultValue } from 'sequelize/types/lib/utils';
 
-const PostEntity = {
+const ReactionEntity = {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     autoIncrement: true,
     primaryKey: true,
   },
+  postId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'post_id',
+  },
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     field: 'user_id',
   },
-  text: {
+  type: {
     type: DataTypes.STRING(255),
     allowNull: true,
-    field: 'text',
+    field: 'type',
+    validate: {
+      isIn: [['like']],
+    },
   },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW,
     field: 'created_at',
+    get (): number {
+      return this.getDataValue('created_at')
+        ? DateTimeUtil.dateToMs(this.getDataValue('created_at'))
+        : null;
+    },
   },
-  updatedAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-    field: 'updated_at',
-  },
-
 };
-export default PostEntity;
+export default ReactionEntity;

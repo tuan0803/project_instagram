@@ -1,14 +1,17 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
-import MediaEntity from '@entities/medias';
-import MediaInterface from '@interfaces/medias';
+import MediaTagEntity from '@entities/media_tags';
+import MediaTagInterface from '@interfaces/media_tags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
-class MediaModel extends Model<MediaInterface> implements MediaInterface {
-  public postId: number;
-  public url: string;
-  public type?: 'image' | 'video';
+class MediaTagModel extends Model<MediaTagInterface> implements MediaTagInterface {
+  public id: number;
+  public userId: number;
+  public mediaId: number;
+  public xCoordinate: number;
+  public yCoordinate: number;
 
-  static readonly hooks: Partial<ModelHooks<MediaModel>> = {
+
+  static readonly hooks: Partial<ModelHooks<MediaTagModel>> = {
     async beforeCreate(record) {
     },
     async afterCreate(record) {
@@ -30,8 +33,8 @@ class MediaModel extends Model<MediaInterface> implements MediaInterface {
   };
 
   public static initialize(sequelize: Sequelize) {
-    this.init(MediaEntity, {
-      hooks: MediaModel.hooks,
+    this.init(MediaTagEntity, {
+      hooks: MediaTagModel.hooks,
       tableName: 'medias',
       sequelize,
       timestamps: false,
@@ -42,4 +45,4 @@ class MediaModel extends Model<MediaInterface> implements MediaInterface {
   }
 }
 
-export default MediaModel;
+export default MediaTagModel;

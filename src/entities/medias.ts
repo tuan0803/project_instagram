@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
-const PostHashtagsEntity = {
+
+const MediaEntity = {
   id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -11,10 +12,16 @@ const PostHashtagsEntity = {
     allowNull: false,
     field: 'post_id',
   },
-  hashtagId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'hashtag_id',
+  url: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'url',
+  },
+  type: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    field: 'type',
   },
 };
-export default PostHashtagsEntity;
+
+export default MediaEntity;

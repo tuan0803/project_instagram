@@ -5,3 +5,4 @@ interface PostHashtagsInterface {
   }
   
   export default PostHashtagsInterface;
+  
