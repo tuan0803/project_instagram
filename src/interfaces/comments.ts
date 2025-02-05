@@ -3,10 +3,8 @@ interface CommentInterface {
     postId: number;
     userId: number;
     content: string;
-    parentId?: number; // id nay se duoc chua o dau ?
+    parentId?: number; 
     createdAt: Date;
 }
-interface CommentCreationAttributes extends Omit<CommentInterface, 'id' | 'createdAt'> { }
 
-export { CommentCreationAttributes };
 export default CommentInterface;

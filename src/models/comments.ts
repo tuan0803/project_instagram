@@ -1,8 +1,8 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
 import CommentEntity from '@entities/comments';
-import CommentInterface, { CommentCreationAttributes } from '@interfaces/comments';
+import CommentInterface from '@interfaces/comments';
 
-class CommentModel extends Model<CommentInterface, CommentCreationAttributes> implements CommentInterface {
+class CommentModel extends Model<CommentInterface> implements CommentInterface {
   public id: number;
   public postId: number;
   public userId: number;
