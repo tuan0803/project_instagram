@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
-import { CommentCreationAttributes } from '@interfaces/comments';
+import CommentInterface from '@interfaces/comments';
 
 class CommentController {
-  public async getComments (req: Request, res: Response) {
+  public async getComments(req: Request, res: Response) {
     try {
       const { postId } = req.params;
       const { page = 1, limit = 15 } = req.query;
@@ -23,7 +23,7 @@ class CommentController {
     }
   }
 
-  public async create (req: Request, res: Response) {
+  public async create(req: Request, res: Response) {
     try {
       const { postId, userId, parentId } = req.params;
       const { content } = req.body;
@@ -32,25 +32,11 @@ class CommentController {
         userId: Number(userId),
         content,
         parentId: parentId ? Number(parentId) : null,
-      } as CommentCreationAttributes);
+      } as CommentInterface);
 
       return sendSuccess(res, newComment, 'Tạo bình luận thành công');
     } catch (error) {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
-    }
-  }
-
-  public async deleteComment (req: Request, res: Response) {
-    try {
-      const { commentId } = req.params;
-      const comment = await CommentModel.findByPk(commentId);
-      if (!comment) {
-        return sendError(res, 404, 'Bình luận không tồn tại');
-      }
-      await comment.destroy();
-      return sendSuccess(res, null, 'Xóa bình luận thành công');
-    } catch (error) {
-      return sendError(res, 500, 'Lỗi khi xóa bình luận', error.message || error);
     }
   }
 }

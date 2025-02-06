@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 
 class ReactionController {
   static readonly REACTIONS = [
-    'like', // Thích
+    'like',
   ];
 
   public async create (req: Request, res: Response) {

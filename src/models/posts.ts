@@ -20,7 +20,6 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async beforeCreate(record) {
-      // Tùy chỉnh logic trước khi tạo post, nếu cần
     },
 
     async afterCreate(record) {

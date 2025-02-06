@@ -22,11 +22,17 @@ const commentEntity = {
     type: DataTypes.STRING(255),
     allowNull: true,
     field: 'content',
+    validate: {
+      len: [1, 255],
+    },
   },
   parentId: {
     type: DataTypes.INTEGER,
     allowNull: true,
     field: 'parent_id',
+    validate: {
+      isInt: true,
+    },
   },
   createdAt: {
     type: DataTypes.DATE,
