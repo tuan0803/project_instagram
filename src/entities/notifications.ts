@@ -1,5 +1,5 @@
 import { DateTimeUtil } from '@libs/datetime';
-import { DataTypes } from 'sequelize';
+const { DataTypes } = require('sequelize');
 
 const NotificationEntity = {
   id: {

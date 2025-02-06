@@ -1,6 +1,4 @@
-import { DateTimeUtil } from '@libs/datetime';
-import { DataTypes } from 'sequelize';
-import { toDefaultValue } from 'sequelize/types/lib/utils';
+const { DataTypes } = require('sequelize');
 
 const PostEntity = {
   id: {
