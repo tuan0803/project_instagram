@@ -73,33 +73,30 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
         ]);
       }
     },
-  };
-  public static async checkExistingFollow(followerId: number, followeeId: number) {
-    const existingFollow = await FollowerModel.scope([
-      { method: ['byFollowerAndFollowee', followerId, followeeId] },
-    ]).findOne();
-
-    if (existingFollow) {
-      if (existingFollow.isApproved) {
+    async checkExistingFollow() {
+      const followerId = this.getDataValue('followerId');
+      const followeeId = this.getDataValue('followeeId');
+  
+      if (!followerId || !followeeId) return;
+  
+      const existingFollow = await FollowerModel.scope([
+        { method: ['byFollowerAndFollowee', followerId, followeeId] },
+      ]).findOne();
+  
+      if (existingFollow) {
         throw new ValidationError('Validation Error', [
-          new ValidationErrorItem('Đã tồn tại mối quan hệ follow!', 'Validation error', 'followeeId', String(followeeId))
-        ]);
-      } else {
-        throw new ValidationError('Validation Error', [
-          new ValidationErrorItem('Yêu cầu follow đang chờ phê duyệt!', 'Validation error', 'followeeId', String(followeeId))
+          new ValidationErrorItem(
+            existingFollow.isApproved 
+              ? 'Đã tồn tại mối quan hệ follow!' 
+              : 'Yêu cầu follow đang chờ phê duyệt!',
+            'Validation error',
+            'followeeId',
+            String(followeeId)
+          )
         ]);
       }
-    }
-  }
-
-  private static async checkUserExist(userId: number, errorType: any) {
-    const user = await UserModel.findByPk(userId);
-    if (!user) {
-      throw new ValidationError('Validation Error', [
-        new ValidationErrorItem(`Người dùng với ID ${userId} không tồn tại!`, 'Validation Error', 'userId', String(userId))
-      ]);
-    }
-  }
+    },
+  };
   public static initialize(sequelize: Sequelize) {
     this.init(FollowerEntity, {
       hooks: FollowerModel.hooks,
