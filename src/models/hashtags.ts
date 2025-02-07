@@ -27,7 +27,7 @@ class HashtagModel extends Model<HastagInterface> implements HastagInterface {
 
   public static associate() {
     HashtagModel.belongsToMany(PostModel, {
-      through: 'PostHashtags',
+      through: 'PostHashtagsModel',
       foreignKey: 'hashtagId',
       as: 'posts',
     });

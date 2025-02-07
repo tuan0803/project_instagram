@@ -8,6 +8,7 @@ import { ModelHooks } from 'sequelize/types/lib/hooks';
 import FileUploaderService from '@services/fileUploader';
 import fs from 'fs';
 import path from 'path';
+import PostHashtagsInterface from '@interfaces/post_hashtags';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
@@ -15,17 +16,45 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   public text?: string;
   public createdAt: Date;
   public updatedAt: Date;
+  declare hashtagsList?: string[];
 
   static readonly CREATABLE = ['userId', 'text'];
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
-    async beforeCreate(record) {
+    async beforeCreate(post) {
+      if (post.text) {
+        post.hashtagsList = post.text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
+      }
     },
 
-    async afterCreate(record) {
-      console.log('Done post:', record);
-    },
+    async afterCreate(post, options) {
+      if (!post.hashtagsList?.length) return;
+      const externalTransaction = !!options?.transaction;
+      const transaction = options?.transaction ?? await PostModel.sequelize?.transaction();
+
+      try {
+        const hashtagInstances = await Promise.all(
+          post.hashtagsList.map(tag =>
+            HashtagModel.findOrCreate({
+              where: { name: tag },
+              defaults: { name: tag },
+              transaction
+            })
+          )
+        );
+        await post.setHashtags(hashtagInstances.map(([hashtag]) => hashtag), { transaction });
+        if (!externalTransaction) {
+          await transaction.commit();
+        }
+      } catch (error) {
+        if (!externalTransaction) {
+          await transaction.rollback();
+        }
+        throw new Error(`Error saving hashtags: ${error.message}`);
+      }
+    }
   };
+
 
   static readonly scopes: ModelScopeOptions = {
     byId(id) {
@@ -55,7 +84,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
     });
 
     PostModel.belongsToMany(HashtagModel, {
-      through: 'PostHashtags',
+      through: 'PostHashtagsModel', // bang trung gian
       foreignKey: 'postId',
       as: 'hashtags',
     });
@@ -64,7 +93,10 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   public static async createPost(userId: number, text: string, mediaBuffer?: Express.Multer.File) {
     const transaction = await PostModel.sequelize?.transaction();
     try {
-      const post = await PostModel.create({ userId, text }, { transaction });
+      const post = await PostModel.create(
+        { userId, text },
+        { transaction }
+      );
 
       if (mediaBuffer) {
         const buffer = mediaBuffer.buffer || fs.readFileSync(mediaBuffer.path);
@@ -73,7 +105,6 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
         const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'];
         let fileType: 'image' | 'video' | null = null;
-
         if (imageExtensions.includes(extension)) {
           fileType = 'image';
         } else if (videoExtensions.includes(extension)) {
@@ -81,35 +112,22 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         } else {
           throw new Error('Unsupported media format');
         }
-
         const fileName = `${userId}_${Date.now()}${extension}`;
         const url = await FileUploaderService.singleUpload(buffer, fileName);
-        await MediaModel.create({ postId: post.id, userId, url, type: fileType }, { transaction });
+        await MediaModel.create(
+          { postId: post.id, userId, url, type: fileType },
+          { transaction }
+        );
       }
 
-      const hashtags = text?.match(/#[\w]+/g) ?? [];
-      const hashtagInstances = await Promise.all(
-        hashtags.map(tag => HashtagModel.findOrCreate({
-          where: { name: tag },
-          defaults: { name: tag },
-          transaction
-        }))
-      );
-
-      const postHashtagsData = hashtagInstances.map(([hashtag]) => ({
-        postId: post.id,
-        hashtagId: hashtag.id,
-      }));
-
-      await PostHashtagsModel.bulkCreate(postHashtagsData, { transaction });
-
-      await transaction?.commit();
+      await transaction.commit();
       return post;
     } catch (error) {
-      await transaction?.rollback();
+      await transaction.rollback();
       throw new Error(`Error creating post: ${error.message}`);
     }
   }
+
 }
 
 export default PostModel;
