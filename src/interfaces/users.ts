@@ -3,6 +3,8 @@ interface UserInterface {
     name: string;
     email: string;
     password: string;
+    currentPassword?: string;
+    passwordConfirmation?: string;
     bio: string;
     phoneNumber: number;
     avatarUrl: string;
