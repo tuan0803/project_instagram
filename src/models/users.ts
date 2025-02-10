@@ -1,4 +1,4 @@
-import { Model, Sequelize, ModelValidateOptions, ModelScopeOptions, Op } from 'sequelize';
+import { Model, Sequelize, ModelValidateOptions, ModelScopeOptions, Op, ValidationErrorItem } from 'sequelize';
 import UserEntity from '@entities/users';
 import UserInterface from '@interfaces/users';
 import bcrypt from 'bcryptjs';
@@ -81,27 +81,27 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     static readonly validations: ModelValidateOptions = {
         isValidEmail() {
             if (this.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
-                throw new Error('Invalid email format!');
+                throw new ValidationErrorItem('Invalid email format', 'Validation error', 'email', this.email);
             }
         },
         async isEmailUnique() {
             if (this.email) {
                 const existedEmail = await UserModel.findOne({ where: { email: this.email } });
                 if (existedEmail && existedEmail.id !== this.id) {
-                    throw new Error('Email already exists!');
+                    throw new ValidationErrorItem('Email already exists!', 'Unique constraint', 'email', this.email);
                 }
             }
         },
         async verifyMatchPassword() {
             if (!this.passwordConfirmation) return;
             if (this.password !== this.passwordConfirmation) {
-                throw new Error('Password confirmation is not matched.');
+                throw new ValidationErrorItem('Password confirmation does not match.', 'Validation error', 'passwordConfirmation', this.passwordConfirmation);
             }
         },        
         async verifyNewPassword() {
             if (!this.currentPassword) return;
             if (this.currentPassword === this.password) {
-              throw new Error('New password must not be the same as current password.');
+                throw new ValidationErrorItem('New password must not be the same as the current password.', 'Validation error', 'password', this.password);
             }
           },
     };
