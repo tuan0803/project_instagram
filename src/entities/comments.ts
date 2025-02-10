@@ -23,7 +23,7 @@ const commentEntity = {
     allowNull: true,
     field: 'content',
     validate: {
-      len: [1, 255],
+      len: [1, 255] as [number, number],
     },
   },
   parentId: {

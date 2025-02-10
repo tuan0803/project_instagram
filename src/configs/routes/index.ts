@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import PostController from '@controllers/Posts';
+import postRoutes from './posts';
+import commentRoutes from './comments';
+
 const router = Router();
-router.post('/posts/create/:userId', PostController.create);
+
+router.use('/posts', postRoutes);
+router.use('/comments', commentRoutes);
+
 export default router;

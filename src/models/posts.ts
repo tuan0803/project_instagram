@@ -9,6 +9,7 @@ import FileUploaderService from '@services/fileUploader';
 import fs from 'fs';
 import path from 'path';
 import PostHashtagsInterface from '@interfaces/post_hashtags';
+import HashtagInterface from '@interfaces/hashtags';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
@@ -37,7 +38,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
           post.hashtagsList.map(tag =>
             HashtagModel.findOrCreate({
               where: { name: tag },
-              defaults: { name: tag },
+              defaults: { name: tag } as Partial<HashtagInterface>,
               transaction
             })
           )
@@ -94,13 +95,13 @@ class PostModel extends Model<PostInterface> implements PostInterface {
     const transaction = await PostModel.sequelize?.transaction();
     try {
       const post = await PostModel.create(
-        { userId, text },
+        { userId, text } as any,
         { transaction }
       );
 
       if (mediaBuffer) {
         const buffer = mediaBuffer.buffer || fs.readFileSync(mediaBuffer.path);
-        const fileNameSource = mediaBuffer.originalname || mediaBuffer.name;
+        const fileNameSource = mediaBuffer.name;
         const extension = path.extname(fileNameSource).toLowerCase();
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
         const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'];
