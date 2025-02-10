@@ -1,5 +1,5 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
-import HastagEntity from '@entities/hastags';
+import HastagEntity from '@entities/hashtags';
 import HastagInterface from '@interfaces/hashtags';
 import PostModel from './posts';
 

@@ -3,7 +3,6 @@ import PostEntity from '@entities/posts';
 import PostInterface from '@interfaces/posts';
 import MediaModel from '@models/medias';
 import HashtagModel from '@models/hashtags';
-import PostHashtagsModel from '@models/post_hashtags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import FileUploaderService from '@services/fileUploader';
 import fs from 'fs';
@@ -116,7 +115,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         const fileName = `${userId}_${Date.now()}${extension}`;
         const url = await FileUploaderService.singleUpload(buffer, fileName);
         await MediaModel.create(
-          { postId: post.id, userId, url, type: fileType },
+          { postId: post.id, url, type: fileType },
           { transaction }
         );
       }
