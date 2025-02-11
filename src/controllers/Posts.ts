@@ -4,9 +4,9 @@ import PostModel from '@models/posts';
 
 class PostController {
   public async create(req: Request, res: Response) {
-    const { userId } = req.params;// em van du lai params vi em can test api 
-                                  // neu bo di em chua biet phai test nhu nao
-    const { text } = req.fields;
+    const { userId } = req.currentUser;
+    const text  = Array.isArray(req.fields.text) ? req.fields.text.join(', ') : req.fields.text;
+    
     const media = req.files?.media;
 
     if (!media) {
@@ -14,7 +14,7 @@ class PostController {
     }
 
     try {
-      const newPost = await PostModel.createPost(userId, text, media);
+      const newPost = await PostModel.create({ userId, text });
       return sendSuccess(res, newPost, 'Post created successfully');
     } catch (error) {
       return sendError(res, 500, 'Error creating post', error.message || error);

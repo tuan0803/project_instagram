@@ -1,8 +1,9 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
-import HastagEntity from '@entities/hastags';
+import HastagEntity from '@entities/medias';
 import HastagInterface from '@interfaces/hashtags';
+import PostModel from './posts';
 
-class HastagModel extends Model<HastagInterface> implements HastagInterface {
+class HashtagModel extends Model<HastagInterface> implements HastagInterface {
   public id: number;
   public name: string;
 
@@ -25,7 +26,12 @@ class HastagModel extends Model<HastagInterface> implements HastagInterface {
   }
 
   public static associate() {
+    HashtagModel.belongsToMany(PostModel, {
+      through: 'PostHashtagsModel',
+      foreignKey: 'hashtagId',
+      as: 'posts',
+    });
   }
 }
 
-export default HastagModel;
+export default HashtagModel;
