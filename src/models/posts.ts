@@ -21,36 +21,31 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   static readonly CREATABLE = ['userId', 'text'];
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
+
     async beforeCreate(post) {
-      if (post.text) {
-        post.hashtagsList = post.text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
-      }
+
     },
 
-    async afterCreate(post, options) {
-      if (!post.hashtagsList?.length) return;
-      const externalTransaction = !!options?.transaction;
-      const transaction = options?.transaction ?? await PostModel.sequelize?.transaction();
+    async afterCreate(post) {
+      if (post.text) {
+        post.hashtagsList = post.text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
+        if (!post.hashtagsList?.length) return;
 
-      try {
-        const hashtagInstances = await Promise.all(
-          post.hashtagsList.map(tag =>
-            HashtagModel.findOrCreate({
-              where: { name: tag },
-              defaults: { name: tag } as Partial<HashtagInterface>,
-              transaction
+        try {
+          const hashtagInstances = await Promise.all(
+            post.hashtagsList.map(async (tag) => {
+              const [hashtag] = await HashtagModel.findOrCreate({
+                where: { name: tag },
+                defaults: { name: tag } as Partial<HashtagInterface>,
+              });
+              return hashtag;
             })
-          )
-        );
-        await post.setHashtags(hashtagInstances.map(([hashtag]) => hashtag), { transaction });
-        if (!externalTransaction) {
-          await transaction.commit();
+          );
+
+          await post.setHashtags(hashtagInstances);
+        } catch (error) {
+          console.error(`Error saving hashtags: ${error.message}`);
         }
-      } catch (error) {
-        if (!externalTransaction) {
-          await transaction.rollback();
-        }
-        throw new Error(`Error saving hashtags: ${error.message}`);
       }
     }
   };
@@ -89,45 +84,6 @@ class PostModel extends Model<PostInterface> implements PostInterface {
       as: 'hashtags',
     });
   }
-
-  public static async createPost(userId: number, text: string, mediaBuffer?: Express.Multer.File) {
-    const transaction = await PostModel.sequelize?.transaction();
-    try {
-      const post = await PostModel.create(
-        { userId, text } as any,
-        { transaction }
-      );
-
-      if (mediaBuffer) {
-        const buffer = mediaBuffer.buffer || fs.readFileSync(mediaBuffer.path);
-        const fileNameSource = mediaBuffer.name;
-        const extension = path.extname(fileNameSource).toLowerCase();
-        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-        const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv'];
-        let fileType: 'image' | 'video' | null = null;
-        if (imageExtensions.includes(extension)) {
-          fileType = 'image';
-        } else if (videoExtensions.includes(extension)) {
-          fileType = 'video';
-        } else {
-          throw new Error('Unsupported media format');
-        }
-        const fileName = `${userId}_${Date.now()}${extension}`;
-        const url = await FileUploaderService.singleUpload(buffer, fileName);
-        await MediaModel.create(
-          { postId: post.id, url, type: fileType },
-          { transaction }
-        );
-      }
-
-      await transaction.commit();
-      return post;
-    } catch (error) {
-      await transaction.rollback();
-      throw new Error(`Error creating post: ${error.message}`);
-    }
-  }
-
 }
 
 export default PostModel;
