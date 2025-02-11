@@ -44,7 +44,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
           await post.setHashtags(hashtagInstances);
         } catch (error) {
-          console.error(`Error saving hashtags: ${error.message}`);
+          return error(`Error saving hashtags: ${error.message}`);
         }
       }
     }
