@@ -40,6 +40,12 @@ const UserEntity = {
       // },
     },
   },
+  passwordConfirmation: {
+    type: DataTypes.VIRTUAL 
+  },
+  currentPassword: {
+    type: DataTypes.VIRTUAL
+  },
   bio: {
     type: DataTypes.TEXT,
     allowNull: true,
