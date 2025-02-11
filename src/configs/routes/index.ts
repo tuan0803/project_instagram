@@ -14,7 +14,7 @@ import Users from './Users'
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
-router.use('/followers', FollowerRoutes);
+router.use('/followers', passport.authenticate('jwt', { session: false}) ,FollowerRoutes);
 router.use('/active', Active);
 router.use('/login', Login);
 router.use('/passwords', passport.authenticate('jwt', { session: false}), Passwords)
