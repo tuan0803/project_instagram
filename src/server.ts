@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: true,
 }));
-// app.use(formidable());
+app.use(formidable());
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use(cors());
@@ -28,7 +28,11 @@ app.use(morganLogger());
 app.use(strongParams());
 
 app.use('/no/api/v1', routes);
-
+app._router.stack.forEach((r: any) => {
+  if (r.route && r.route.path) {
+    console.log(`${Object.keys(r.route.methods)[0].toUpperCase()} ${r.route.path}`);
+  }
+});
 app.use((req, res) => {
   res.status(404).send({ url: `${req.path} not found` });
 });
