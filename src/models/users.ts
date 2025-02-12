@@ -142,8 +142,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     public async generateToken(existingRefreshExp?: number) {
         const accessToken = jwt.sign(
             {
-                userId: this.id,
-                userEmail: this.email,
+                id: this.id,
             },
             Settings.jwtSecret,
             { expiresIn: Settings.access_ttl }
