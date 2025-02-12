@@ -4,14 +4,8 @@ import PostModel from '@models/posts';
 
 class PostController {
   public async create(req: Request, res: Response) {
-    const { userId } = req.currentUser || 1;
-    const text  = Array.isArray(req.fields.text) ? req.fields.text.join(', ') : req.fields.text;
-    
-    const media = req.files?.media;
-
-    if (!media) {
-      return sendError(res, 400, 'Media is required to create post');
-    }
+    const { userId } = req.currentUser ?? { userId: 1 };
+    const text = Array.isArray(req.fields.text) ? req.fields.text.join(', ') : req.fields.text;
 
     try {
       const newPost = await PostModel.create({ userId, text });

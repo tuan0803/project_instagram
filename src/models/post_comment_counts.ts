@@ -12,6 +12,7 @@ class PostCommentCountModel extends Model {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           unique: true,
+          primaryKey: true,
           references: { model: 'posts', key: 'id' },
         },
         commentCount: {

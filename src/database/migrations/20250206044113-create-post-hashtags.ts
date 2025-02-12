@@ -24,22 +24,10 @@ module.exports = {
         allowNull: false,
         field: 'hashtag_id',
         references: {
-          model: 'hashtags', 
+          model: 'hashtags',
           key: 'id',
         },
         onDelete: 'CASCADE',
-      },
-      createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        field: 'created_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-      },
-      updatedAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        field: 'updated_at',
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },

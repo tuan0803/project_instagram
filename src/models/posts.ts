@@ -23,42 +23,60 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async afterCreate(post) {
-      try {
-        if (post.text) {
-          post.hashtagsList = post.text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
-          if (post.hashtagsList.length) {
-            const hashtagInstances = await Promise.all(
-              post.hashtagsList.map(async (tag) => {
-                const [hashtag] = await HashtagModel.findOrCreate({
-                  where: { name: tag },
-                  defaults: { name: tag } as Partial<HashtagInterface>,
-                });
-
-                return hashtag;
-              })
-            );
-            await post.setHashtags(hashtagInstances);
-          }
-        }
-        if (post.taggedUserIds && post.taggedUserIds.length > 0) {
-          const users = await UserModel.findAll({ where: { id: post.taggedUserIds } });
-          if (users.length !== post.taggedUserIds.length) {
-            console.warn('Một số người dùng được tag không hợp lệ, bỏ qua.');
-          }
-          const validTags: Partial<PostTagInterface>[] = users.map(user => ({
-            postId: post.id,
-            userId: user.id,
-          }));
-
-          if (validTags.length) {
-            await PostTagModel.bulkCreate(validTags, { ignoreDuplicates: true });
-          }
-        }
-      } catch (error) {
-        console.error('Lỗi xử lý hashtags hoặc gắn thẻ:', error.message);
-      }
+      await PostModel.processHashtags(post);
+      await PostModel.processTaggedUsers(post);
     }
   };
+
+  // Xử lý hashtags
+  private static async processHashtags(post: PostModel) {
+    try {
+      if (!post.text) return;
+      post.hashtagsList = post.text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
+
+      if (post.hashtagsList.length) {
+        const hashtagInstances = await Promise.all(
+          post.hashtagsList.map(async (tag) => {
+            const [hashtag] = await HashtagModel.findOrCreate({
+              where: { name: tag },
+              defaults: { name: tag } as Partial<HashtagInterface>,
+            });
+
+            return hashtag;
+          })
+        );
+        await post.setHashtags(hashtagInstances);
+      }
+    } catch (error) {
+      console.error('Lỗi xử lý hashtags :', error.message);
+    }
+
+  }
+
+  // Xử lý gắn thẻ người dùng
+  private static async processTaggedUsers(post: PostModel) {
+    try {
+      if (!post.text) return;
+      const taggedUserIds = (post.text.match(/@(\d+)/g) || []).map(tag => Number(tag.replace('@', '')));
+
+      if (taggedUserIds.length === 0) return;
+      const users = await UserModel.findAll({ where: { id: taggedUserIds } });
+
+      if (users.length !== taggedUserIds.length) {
+        console.warn('Một số người dùng được tag không hợp lệ, bỏ qua.');
+      }
+      const validTags: Partial<PostTagInterface>[] = users.map(user => ({
+        postId: post.id,
+        userId: user.id,
+      }));
+
+      if (validTags.length) {
+        await PostTagModel.bulkCreate(validTags);
+      }
+    } catch (error) {
+      console.error('Lỗi xử lý gắn thẻ:', error.message);
+    }
+  }
 
   static readonly scopes: ModelScopeOptions = {
     byId(id) {
@@ -86,11 +104,12 @@ class PostModel extends Model<PostInterface> implements PostInterface {
     });
     PostModel.belongsToMany(HashtagModel, {
       through: 'post_hashtags', // bang trung gian
-      foreignKey: 'postId',
+      foreignKey: 'id',
       as: 'hashtags',
+      timestamps: false,
     });
     PostModel.belongsToMany(UserModel, {
-      through: 'post_tag',
+      through: 'post_tags',
       foreignKey: 'postId',
       as: 'taggedUsers',
     });

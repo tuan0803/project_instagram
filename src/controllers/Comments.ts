@@ -17,10 +17,10 @@ class CommentController {
 
   public async create(req: Request, res: Response) {
     try {
-      const { postId, userId, parentId } = req.params;
+      const { userId } = req.currentUser ?? { userId: 1 };
+      const { postId, parentId } = req.params;
       const { content } = req.fields || req.body;
       const newComment = await CommentModel.createComment(Number(postId), Number(userId), content, parentId ? Number(parentId) : undefined);
-      console.log(newComment,"aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
       return sendSuccess(res, newComment, 'Tạo bình luận thành công');
     } catch (error) {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
@@ -31,14 +31,19 @@ class CommentController {
     try {
       const { id } = req.params;
       const { content } = req.fields || req.body;
+      const { userId } = req.currentUser ?? { userId: 1 };
+
       if (!content) {
         return sendError(res, 400, 'Nội dung bình luận không được để trống');
       }
-
-      const updatedComment = await CommentModel.updateComment(Number(id), content);
-      if (!updatedComment) {
+      const comment = await CommentModel.findByPk(Number(id));
+      if (!comment) {
         return sendError(res, 404, 'Không tìm thấy bình luận');
       }
+      if (comment.userId !== userId) {
+        return sendError(res, 403, 'Bạn không có quyền cập nhật bình luận này');
+      }
+      const updatedComment = await CommentModel.updateComment(Number(id), content);
 
       return sendSuccess(res, updatedComment, 'Cập nhật bình luận thành công');
     } catch (error) {
@@ -46,12 +51,22 @@ class CommentController {
     }
   }
 
+
   public async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
       const deleted = await CommentModel.deleteComment(Number(id));
+      const { userId } = req.currentUser ?? { userId: 1 };
+
       if (!deleted) {
         return sendError(res, 404, 'Không tìm thấy bình luận');
+      }
+      const comment = await CommentModel.findByPk(Number(id));
+      if (!comment) {
+        return sendError(res, 404, 'Không tìm thấy bình luận');
+      }
+      if (comment.userId !== userId) {
+        return sendError(res, 403, 'Bạn không có quyền cập nhật bình luận này');
       }
 
       return sendSuccess(res, null, 'Xóa bình luận thành công');

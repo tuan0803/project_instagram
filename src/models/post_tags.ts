@@ -12,7 +12,7 @@ class PostTagModel extends Model<PostInterface> implements PostInterface {
     public static initialize(sequelize: Sequelize) {
         this.init(PostTagEntity, {
             sequelize,
-            tableName: 'post_tag',
+            tableName: 'post_tags',
             timestamps: false,
         });
     }
