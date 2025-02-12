@@ -8,40 +8,9 @@ import FileUploaderService from '@services/fileUploader';
 const upload = multer();
 
 class ProfileController {
-  public async index (req: Request, res: Response) {
-    try {
-      const { page = 1, limit = 10, name } = req.query;
-      const offset = (Number(page) - 1) * Number(limit);
-      const scopes: any[] = [];
-      if (name) {
-        scopes.push({ method: ['byName', name] });
-      }
-      const users = await UserModel.scope(scopes).findAndCountAll({
-        offset,
-        limit: Number(limit),
-      });
-
-      if (!users.count) {
-        return sendError(res, 404, NoData);
-      }
-
-      return sendSuccess(res, {
-        items: users.rows,
-        total: users.count,
-        page: Number(page),
-        limit: Number(limit),
-      });
-    } catch (error) {
-      return sendError(res, 500, InternalError, error);
-    }
-  }
-
   public async show (req: Request, res: Response) {
     try {
-      let id = req.params.id;
-      if (id === 'me') {
-        id = req.currentUser.id;
-      }
+      const { id } = req.currentUser;
       const user = await UserModel.scope({ method: ['byId', id] }).findOne();
       if (!user) {
         return sendError(res, 404, NoData);

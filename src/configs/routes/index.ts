@@ -17,5 +17,5 @@ router.use('/followers', FollowerRoutes);
 router.use('/active', Active);
 router.use('/login', Login);
 router.use('/passwords', passport.authenticate('jwt', { session: false}), Passwords)
-router.use('/users', passport.authenticate('jwt', { session: false }), Profiles);
+router.use('/me', passport.authenticate('jwt', { session: false }), Profiles);
 export default router;
