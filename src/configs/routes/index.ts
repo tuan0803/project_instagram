@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import postRoutes from './posts';
+import postRoutes from './Posts';
 import commentRoutes from './comments';
 import Register from './Register';
 import FollowerRoutes from './FollowerRoutes';
