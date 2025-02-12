@@ -7,7 +7,7 @@ import FileUploaderService from '@services/fileUploader';
 
 const upload = multer();
 
-class UserController {
+class ProfileController {
   public async index (req: Request, res: Response) {
     try {
       const { page = 1, limit = 10, name } = req.query;
@@ -94,4 +94,4 @@ class UserController {
   }
 }
 
-export default new UserController();
+export default new ProfileController();
