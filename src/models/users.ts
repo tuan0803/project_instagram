@@ -173,8 +173,6 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             tableName: 'users',
             modelName: 'user',
             timestamps: true,
-            createdAt: 'created_at',
-            updatedAt: 'updated_at',
         });
     }
 
@@ -182,13 +180,10 @@ class UserModel extends Model<UserInterface> implements UserInterface {
        
     }
 
-    public toJSON() {
-        const values = { ...this.get() };
-        delete values.password;
-        delete values.verificationCode;  
-        delete values.passwordConfirmation;   
+    public toJSON () {
+        const { password, verificationCode, passwordConfirmation, verificationCodeExpiry, firstLoginDate, ...values } = this.get();
         return values;
-    }
+      }
 }
 
 export default UserModel;
