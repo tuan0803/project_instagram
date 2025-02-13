@@ -35,6 +35,14 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   };
 
   static readonly hooks: Partial<ModelHooks<FollowerModel>> = {
+    async beforeCreate(follower: FollowerModel) {
+      const followeeUser = await UserModel.findByPk(follower.followeeId);
+      if (followeeUser?.isPrivate) {
+        follower.isApproved = false;
+      } else {
+        follower.isApproved = true;
+      }
+    },
     async afterCreate(follower: FollowerModel) {
       const followerUser = await UserModel.findByPk(follower.followerId);
       if (!follower.isApproved) {
@@ -95,20 +103,6 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
             String(followeeId)
           )
         ]);
-      }
-      if(followeeId && followeeId.isPrivate) {
-        if(!existingFollow || !existingFollow.isApproved){
-          throw new ValidationError('Validation Error', [
-            new ValidationErrorItem(
-              'Tài khoản này là private, yêu cầu follow chưa được chấp nhận!',
-              'Validation error',
-              'followeeId',
-              String(followeeId)
-            )
-          ])
-        }
-      } else {
-        this.isApproved = true;
       }
     }
   };
