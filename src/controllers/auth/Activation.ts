@@ -5,7 +5,7 @@ import { NoData, InternalError } from '@libs/errors';
 
 class ActiveController {
     public async create(req: Request, res: Response) {
-        const { id } = req.fields;
+        const { id } = req.body;
         
         try {
             const user = await UserModel.findByPk(id);

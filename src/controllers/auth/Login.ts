@@ -6,7 +6,7 @@ import { BadAuthentication, InternalError } from '@libs/errors';
     
 class LoginController {
     public async login(req: Request, res: Response) {
-        const { email, password } = req.fields;
+        const { email, password } = req.body;
         
         try {
             const user = await UserModel.scope([{ method: ['byEmail', email] }]).findOne();
