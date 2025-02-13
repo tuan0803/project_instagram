@@ -1,6 +1,6 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
-import PostHashtagsInterface from '@interfaces/post_hashtags';
+import PostHashtagsInterface from '@interfaces/postHashtags';
 import PostHashtagsEntity from '@entities/post_hashtags';
 import PostModel from './posts';
 import HashtagModel from './hashtags';

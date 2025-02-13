@@ -1,6 +1,6 @@
 import { Model, Sequelize } from 'sequelize';
-import PostTagEntity from '@entities/post_tags';
-import PostInterface from '@interfaces/post_tags';
+import PostTagEntity from '@entities/postTags';
+import PostInterface from '@interfaces/postTags';
 import UserModel from '@models/users';
 import PostModel from '@models/posts';
 

@@ -1,6 +1,6 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
-import MediaTagEntity from '@entities/media_tags';
-import MediaTagInterface from '@interfaces/media_tags';
+import MediaTagEntity from '@entities/mediaTags';
+import MediaTagInterface from '@interfaces/mediaTags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
 class MediaTagModel extends Model<MediaTagInterface> implements MediaTagInterface {

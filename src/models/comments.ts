@@ -3,7 +3,7 @@ import CommentEntity from '@entities/comments';
 import CommentInterface from '@interfaces/comments';
 import PostModel from './posts';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
-import PostCommentCountModel from './post_comment_counts';
+import PostCommentCountModel from './postCommentCounts';
 
 class CommentModel extends Model<CommentInterface> implements CommentInterface {
   public id: number;
