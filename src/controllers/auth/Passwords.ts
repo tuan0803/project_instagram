@@ -7,7 +7,7 @@ import { BadAuthentication, InternalError } from '@libs/errors';
 class PasswordController {
     public async update(req: Request, res: Response) {
         try {
-            const { currentPassword, newPassword, passwordConfirmation } = req.fields;
+            const { currentPassword, newPassword, passwordConfirmation } = req.body;
             const user = await UserModel.findByPk(req.currentUser.userId);
             if (!(await user.validPassword(currentPassword))) {
                 return sendError(res, 404, BadAuthentication);
