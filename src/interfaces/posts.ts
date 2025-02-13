@@ -1,11 +1,9 @@
 interface PostInterface {
-  id: number;
+  id?: number;
   userId: number;
   text?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  commentCount?: number;
-  reactionCount?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export default PostInterface;
