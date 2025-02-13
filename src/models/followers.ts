@@ -11,6 +11,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   public followeeId: number;
   public isApproved: boolean;
   public createdAt?: Date;
+  public updatedAt?: Date;
 
   static readonly CREATABLE_PARAMETERS = ['followerId', 'followeeId', 'isApproved'];
   static readonly UPDATABLE_PARAMETERS = ['isApproved'];
@@ -34,6 +35,14 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   };
 
   static readonly hooks: Partial<ModelHooks<FollowerModel>> = {
+    async beforeCreate(follower: FollowerModel) {
+      const followeeUser = await UserModel.findByPk(follower.followeeId);
+      if (followeeUser?.isPrivate) {
+        follower.isApproved = false;
+      } else {
+        follower.isApproved = true;
+      }
+    },
     async afterCreate(follower: FollowerModel) {
       const followerUser = await UserModel.findByPk(follower.followerId);
       if (!follower.isApproved) {
@@ -95,7 +104,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
           )
         ]);
       }
-    },
+    }
   };
   public static initialize(sequelize: Sequelize) {
     this.init(FollowerEntity, {
@@ -107,6 +116,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
       modelName: 'follower',
       timestamps: true,
       createdAt: 'created_at',
+      updatedAt: 'updated_at',
     });
   }
 

@@ -8,7 +8,7 @@ class FollowerController {
     try {
       const { followeeId } = req.body;
 
-      const followerId = req.currentUser['x-user-id'];
+      const followerId = req.currentUser.id;
 
       const targetUser = await UserModel.findByPk(followeeId);
 
@@ -30,6 +30,23 @@ class FollowerController {
 
     } catch (error) {
       sendError(res, 500, {errorCode : 131}, error);
+    }
+  }
+  public async unfollow (req: Request, res: Response) {
+    try {
+      const {followeeId} = req.body;
+      const followerId = req.currentUser.id;
+
+      const follow = await FollowerModel.scope([
+        { method: ['byFollowerAndFollowee', followerId, followeeId] },
+      ]).findOne();
+      if(!follow){
+        return sendError(res, 404, NoData.message);
+      }
+      await follow.destroy();
+        return sendSuccess(res, { isSuccess: true });
+    } catch (error) {
+      sendError(res, 500, {errorCode : 132}, error);
     }
   }
 }

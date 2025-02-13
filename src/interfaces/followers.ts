@@ -4,6 +4,7 @@ interface FollowerInterface {
     followeeId: number;
     isApproved: boolean;
     createdAt?: Date;
+    updatedAt?: Date;
   };
 
 export default FollowerInterface;
