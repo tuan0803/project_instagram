@@ -38,3 +38,10 @@ dist/**/*
 public/upload/*
 
 *-workspace
+
+package-lock.json
+package.json
+yarn.lock
+.env,examples
+dist
+tsconfig.json
