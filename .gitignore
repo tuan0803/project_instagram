@@ -42,6 +42,5 @@ public/upload/*
 package-lock.json
 package.json
 yarn.lock
-.env,examples
-dist
+.env.examples
 tsconfig.json
