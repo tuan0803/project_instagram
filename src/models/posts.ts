@@ -52,16 +52,21 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   public static associate() {
     PostModel.belongsToMany(HashtagModel, {
       through: 'post_hashtags',
-      foreignKey: 'postId',
+      foreignKey: 'post_id',
+      otherKey: 'hashtag_id',
       as: 'hashtags',
       timestamps: false,
     });
+
     PostModel.belongsToMany(UserModel, {
       through: 'post_tags',
-      foreignKey: 'postId',
+      foreignKey: 'post_id',
+      otherKey: 'user_id',
       as: 'taggedUsers',
+      timestamps: false,
     });
   }
+
 }
 
 export default PostModel;

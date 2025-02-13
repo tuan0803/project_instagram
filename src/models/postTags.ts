@@ -18,8 +18,6 @@ class PostTagModel extends Model<PostInterface> implements PostInterface {
     }
 
     public static associate() {
-        this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });
-        this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post' });
     }
 }
 

@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import Settings from '@configs/settings';
 import MailActive from '@services/mailer';
+import PostModel from './posts';
 
 class UserModel extends Model<UserInterface> implements UserInterface {
     public id: number;
@@ -88,7 +89,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
 
     public static async generateVerificationCode(): Promise<string> {
         let code = '';
-        const codeLength = 32; 
+        const codeLength = 32;
         const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         for (let i = 0; i < codeLength; i++) {
             const randomIndex = Math.floor(Math.random() * characters.length);
@@ -104,7 +105,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
 
     public async sendMailActive() {
         const verificationCode = await UserModel.generateVerificationCode();
-        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); 
+        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
         const { email } = this;
         await UserModel.update(
             { verificationCode, verificationCodeExpiry },
@@ -164,13 +165,18 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     }
 
     public static associate() {
-       
+        UserModel.belongsToMany(PostModel, {
+            through: 'post_tags',
+            foreignKey: 'user_id',
+            otherKey: 'post_id',
+            as: 'taggedPosts',
+        });
     }
 
     public toJSON() {
         const values = { ...this.get() };
         delete values.password;
-        delete values.verificationCode;  
+        delete values.verificationCode;
         return values;
     }
 }

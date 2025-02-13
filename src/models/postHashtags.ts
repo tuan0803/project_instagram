@@ -1,7 +1,7 @@
 import { Model, Sequelize, ModelScopeOptions } from 'sequelize';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import PostHashtagsInterface from '@interfaces/postHashtags';
-import PostHashtagsEntity from '@entities/post_hashtags';
+import PostHashtagsEntity from '@entities/postHashtags';
 import PostModel from './posts';
 import HashtagModel from './hashtags';
 
@@ -39,8 +39,6 @@ class PostHashtagsModel extends Model<PostHashtagsInterface> implements PostHash
   }
 
   public static associate() {
-    this.belongsTo(PostModel, { foreignKey: 'postId' });
-    this.belongsTo(HashtagModel, { foreignKey: 'hashtagId' });
   }
 }
 
