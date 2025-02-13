@@ -8,11 +8,11 @@ import HashtagInterface from '@interfaces/hashtags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
-  public id: number;
-  public userId: number;
+  public id!: number;
+  public userId!: number;
   public text?: string;
-  public createdAt: Date;
-  public updatedAt: Date;
+  public createdAt!: Date;
+  public updatedAt!: Date;
   declare hashtagsList?: string[];
   declare taggedUserIds?: number[];
 
@@ -20,41 +20,18 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async beforeCreate(post) {
-      await PostModel.processHashtags(post);
-      await PostModel.processTaggedUsers(post);
+      PostModel.extractHashtags(post);
+      PostModel.extractTaggedUsers(post);
     }
   };
 
-  // Xử lý hashtags
-  private static async processHashtags(post: PostModel) {
-    try {
-      if (!post.text) return;
-      post.hashtagsList = post.text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
-      if (post.hashtagsList.length) {
-        post.hashtagsList.map(async (tag) => {
-          const [hashtag] = await HashtagModel.findOrCreate({
-            where: { name: tag },
-            defaults: { name: tag } as Partial<HashtagInterface>,
-          });
-          return hashtag;
-        })
-      }
-    } catch (error) {
-      console.error('Lỗi xử lý hashtags :', error.message);
-    }
+  public static extractHashtags(text: string | undefined): string[] {
+    if (typeof text !== "string") return [];
+    return text.match(/#[\w]+/g)?.map(tag => tag.toLowerCase()) ?? [];
   }
-
-  // Xử lý gắn thẻ người dùng
-  private static async processTaggedUsers(post: PostModel) {
-    try {
-      if (!post.text) return;
-      const taggedUserIds = (post.text.match(/@(\d+)/g) || []).map(tag => Number(tag.replace("@", "")));
-
-      if (taggedUserIds.length === 0) return;
-      await UserModel.findAll({ where: { id: taggedUserIds } });
-    } catch (error) {
-      throw new Error("Lỗi xử lý gắn thẻ người dùng");
-    }
+  public static extractTaggedUsers(text: string | undefined): number[] {
+    if (typeof text !== "string") return [];
+    return text.match(/@(\d+)/g)?.map(tag => Number(tag.replace("@", ""))) ?? [];
   }
 
   static readonly scopes: ModelScopeOptions = {
@@ -73,17 +50,9 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   }
 
   public static associate() {
-    PostModel.hasMany(MediaModel, {
-      foreignKey: 'postId',
-      as: 'media',
-    });
-    MediaModel.belongsTo(PostModel, {
-      foreignKey: 'postId',
-      as: 'post',
-    });
     PostModel.belongsToMany(HashtagModel, {
-      through: 'post_hashtags', // bang trung gian
-      foreignKey: 'id',
+      through: 'post_hashtags',
+      foreignKey: 'postId',
       as: 'hashtags',
       timestamps: false,
     });
