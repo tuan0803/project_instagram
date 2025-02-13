@@ -10,6 +10,7 @@ import passportJwt from '@middlewares/passport-jwt';
 import Passwords from './Passwords';
 passportJwt(passport);
 import Profiles from './Profiles'
+import Users from './Users'
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
@@ -18,4 +19,5 @@ router.use('/active', Active);
 router.use('/login', Login);
 router.use('/passwords', passport.authenticate('jwt', { session: false}), Passwords)
 router.use('/me', passport.authenticate('jwt', { session: false }), Profiles);
+router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 export default router;
