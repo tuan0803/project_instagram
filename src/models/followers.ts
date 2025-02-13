@@ -11,6 +11,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   public followeeId: number;
   public isApproved: boolean;
   public createdAt?: Date;
+  public updatedAt?: Date;
 
   static readonly CREATABLE_PARAMETERS = ['followerId', 'followeeId', 'isApproved'];
   static readonly UPDATABLE_PARAMETERS = ['isApproved'];
@@ -95,7 +96,21 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
           )
         ]);
       }
-    },
+      if(followeeId && followeeId.isPrivate) {
+        if(!existingFollow || !existingFollow.isApproved){
+          throw new ValidationError('Validation Error', [
+            new ValidationErrorItem(
+              'Tài khoản này là private, yêu cầu follow chưa được chấp nhận!',
+              'Validation error',
+              'followeeId',
+              String(followeeId)
+            )
+          ])
+        }
+      } else {
+        this.isApproved = true;
+      }
+    }
   };
   public static initialize(sequelize: Sequelize) {
     this.init(FollowerEntity, {
@@ -107,6 +122,7 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
       modelName: 'follower',
       timestamps: true,
       createdAt: 'created_at',
+      updatedAt: 'updated_at',
     });
   }
 

@@ -8,7 +8,7 @@ class FollowerController {
     try {
       const { followeeId } = req.body;
 
-      const followerId = req.currentUser['x-user-id'];
+      const followerId = req.currentUser.id;
 
       const targetUser = await UserModel.findByPk(followeeId);
 
@@ -35,7 +35,7 @@ class FollowerController {
   public async unfollow (req: Request, res: Response) {
     try {
       const {followeeId} = req.body;
-      const followerId = req.currentUser['x-user-id'];
+      const followerId = req.currentUser.id;
 
       const follow = await FollowerModel.scope([
         { method: ['byFollowerAndFollowee', followerId, followeeId] },
