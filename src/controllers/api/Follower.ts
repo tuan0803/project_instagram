@@ -50,14 +50,28 @@ class FollowerController {
     }
   }
   public async getFollowers(req: Request, res: Response) {
+    
     try {
-      const userId = req.currentUser.id;
+      const followeeId = req.query.followeeId ? Number(req.query.followeeId) : req.currentUser.id;
+      const currentUserId = req.currentUser.id;
+      const targetUser = await UserModel.findByPk(followeeId);
+      if (!targetUser) {
+        return sendError(res, 404, NoData.message);
+      }
+      if (targetUser.isPrivate && targetUser.id !== currentUserId) {
+        const isFollowing = await FollowerModel.findOne({
+          where:{ followerId: currentUserId, followeeId: followeeId },
+        });
+        if(!isFollowing){
+          return sendError(res, 405, NoData.message);
+        }
+      }
       const {limit = 10, page =1} = req.query;
       const pageNumber = Number(page);
       const limitNumber = Number(limit);
       const offset = (pageNumber - 1) * limitNumber;
       const followers = await FollowerModel.scope([
-        { method: ['byFollowee', userId] },
+        { method: ['byFollowee', followeeId] },
         { method: ['isApproved'] },
       ]).findAll({
         include: [{ model: UserModel, as: 'followerInfo', attributes: ['id', 'name', 'avatar_url'] }],
@@ -65,7 +79,7 @@ class FollowerController {
         offset: offset,
       });
       const totalFollowers = await FollowerModel.scope([
-        { method: ['byFollowee', userId] },
+        { method: ['byFollowee', followeeId] },
         { method: ['isApproved'] },
       ]).count();
       const totalPages = Math.ceil(totalFollowers / limitNumber);
