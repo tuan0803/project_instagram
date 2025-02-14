@@ -70,7 +70,7 @@ class FollowerController {
       const pageNumber = Number(page);
       const limitNumber = Number(limit);
       const offset = (pageNumber - 1) * limitNumber;
-      const followers = await FollowerModel.scope([
+      const { rows: followers, count: totalFollowers } = await FollowerModel.scope([
         { method: ['byFollowee', followeeId] },
         { method: ['isApproved'] },
       ]).findAndCountAll({
@@ -78,10 +78,6 @@ class FollowerController {
         limit: limitNumber,
         offset: offset,
       });
-      const totalFollowers = await FollowerModel.scope([
-        { method: ['byFollowee', followeeId] },
-        { method: ['isApproved'] },
-      ]).count();
       const totalPages = Math.ceil(totalFollowers / limitNumber);
       return sendSuccess(res, {
         followers,
@@ -91,7 +87,7 @@ class FollowerController {
           currentPage: pageNumber,
           limit: limitNumber,
         },
-       });
+      });
     } catch (error) {
       sendError(res, 500, { errorCode: 132 }, error);
     }
