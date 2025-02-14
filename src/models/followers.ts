@@ -121,7 +121,8 @@ class FollowerModel extends Model<FollowerInterface> implements FollowerInterfac
   }
 
   public static associate() {
-
+  this.belongsTo(UserModel, { foreignKey: 'followerId', as: 'followerInfo' });
+  this.belongsTo(UserModel, { foreignKey: 'followeeId', as: 'followeeInfo' });
   }
 
   }

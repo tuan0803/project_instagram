@@ -67,7 +67,7 @@ class NotificationModel extends Model<NotificationInterface> implements Notifica
       userId: followeeId,
       notifiableType: 'follow',
       notifiableId: followerId,
-      title: 'Yêu cầu theo dõi mới',
+      title: 'Người theo dõi mới',
       shortContent: `${followerUser.name} đã theo dõi bạn.`,
       content: `Người dùng ${followerUser.name} đã theo dõi bạn.`,
     });
