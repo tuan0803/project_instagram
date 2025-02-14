@@ -73,7 +73,7 @@ class FollowerController {
       const followers = await FollowerModel.scope([
         { method: ['byFollowee', followeeId] },
         { method: ['isApproved'] },
-      ]).findAll({
+      ]).findAndCountAll({
         include: [{ model: UserModel, as: 'followerInfo', attributes: ['id', 'name', 'avatar_url'] }],
         limit: limitNumber,
         offset: offset,
