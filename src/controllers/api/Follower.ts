@@ -60,7 +60,7 @@ class FollowerController {
       }
       if (targetUser.isPrivate && targetUser.id !== currentUserId) {
         const isFollowing = await FollowerModel.findOne({
-          where:{ followerId: currentUserId, followeeId: followeeId },
+          where:{ followerId: currentUserId, followeeId: followeeId, isApproved : true },
         });
         if(!isFollowing){
           return sendError(res, 405, NoData.message);
