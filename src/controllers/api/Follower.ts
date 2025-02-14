@@ -52,20 +52,36 @@ class FollowerController {
   public async getFollowers(req: Request, res: Response) {
     try {
       const userId = req.currentUser.id;
-  
+      const {limit = 10, page =1} = req.query;
+      const pageNumber = Number(page);
+      const limitNumber = Number(limit);
+      const offset = (pageNumber - 1) * limitNumber;
       const followers = await FollowerModel.scope([
         { method: ['byFollowee', userId] },
         { method: ['isApproved'] },
       ]).findAll({
         include: [{ model: UserModel, as: 'followerInfo', attributes: ['id', 'name', 'avatar_url'] }],
+        limit: limitNumber,
+        offset: offset,
       });
-  
-      return sendSuccess(res, { followers });
+      const totalFollowers = await FollowerModel.scope([
+        { method: ['byFollowee', userId] },
+        { method: ['isApproved'] },
+      ]).count();
+      const totalPages = Math.ceil(totalFollowers / limitNumber);
+      return sendSuccess(res, {
+        followers,
+        pagination: {
+          totalFollowers,
+          totalPages,
+          currentPage: pageNumber,
+          limit: limitNumber,
+        },
+       });
     } catch (error) {
       sendError(res, 500, { errorCode: 132 }, error);
     }
   }
-  
 }
 
 export default new FollowerController();
