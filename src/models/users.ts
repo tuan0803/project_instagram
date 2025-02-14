@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { Model, Sequelize, ModelValidateOptions, ModelScopeOptions, Op, ValidationErrorItem } from 'sequelize';
 import UserEntity from '@entities/users';
 import UserInterface from '@interfaces/users';
@@ -6,7 +7,8 @@ import jwt from 'jsonwebtoken';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import Settings from '@configs/settings';
 import MailActive from '@services/mailer';
-import fs from 'fs';
+import PostModel from './posts';
+import PostTagUserModel from './postTagUsers';
 
 class UserModel extends Model<UserInterface> implements UserInterface {
     public id: number;
@@ -27,7 +29,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     public updatedAt: Date;
 
     static readonly CREATABLE_PARAMETERS = ['email', 'password', 'name', 'passwordConfirmation'];
-    static readonly UPDATABLE_PARAMETERS = ['name', 'bio', 'avatar_url', 'phone_number'];
+    static readonly UPDATABLE_PARAMETERS = ['name', 'bio', 'avatarUrl', 'phoneNumber', 'isPrivate'];
 
     static readonly hooks: Partial<ModelHooks<UserModel>> = {
         async beforeSave(record) {
@@ -172,12 +174,13 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             sequelize,
             tableName: 'users',
             modelName: 'user',
-            timestamps: true
+            timestamps: true,
         });
     }
 
     public static associate() {
-       
+        this.hasMany(PostModel, { foreignKey: 'userId', as: 'posts' });
+        this.belongsToMany(PostModel, { through: PostTagUserModel, foreignKey: 'userId', otherKey: 'postId', as: 'taggedPosts' });
     }
 
     public toJSON () {
