@@ -49,6 +49,23 @@ class FollowerController {
       sendError(res, 500, {errorCode : 132}, error);
     }
   }
+  public async getFollowers(req: Request, res: Response) {
+    try {
+      const userId = req.currentUser.id;
+  
+      const followers = await FollowerModel.scope([
+        { method: ['byFollowee', userId] },
+        { method: ['isApproved'] },
+      ]).findAll({
+        include: [{ model: UserModel, as: 'followerInfo', attributes: ['id', 'name', 'avatar_url'] }],
+      });
+  
+      return sendSuccess(res, { followers });
+    } catch (error) {
+      sendError(res, 500, { errorCode: 132 }, error);
+    }
+  }
+  
 }
 
 export default new FollowerController();
