@@ -92,6 +92,52 @@ class FollowerController {
       sendError(res, 500, { errorCode: 132 }, error);
     }
   }
+  public async getFollowing(req: Request, res: Response) {
+    try {
+      const userId = req.query.userId ? Number(req.query.userId) : req.currentUser.id;
+      const currentUserId = req.currentUser.id;
+
+      const targetUser = await UserModel.findByPk(userId);
+      if (!targetUser) {
+        return sendError(res, 404, NoData.message);
+      }
+  
+      if (targetUser.isPrivate && targetUser.id !== currentUserId) {
+
+        const isFollowing = await FollowerModel.findOne({
+          where: { followerId: currentUserId, followeeId: userId, isApproved: true },
+        });
+        if (!isFollowing) {
+          return sendError(res, 405, NoData.message); 
+        }
+      }
+  
+      const { limit = 10, page = 1 } = req.query;
+      const pageNumber = Number(page);
+      const limitNumber = Number(limit);
+      const offset = (pageNumber - 1) * limitNumber;
+      const { rows: following, count: totalFollowing } = await FollowerModel.findAndCountAll({
+        where: { followerId: userId, isApproved: true },
+        include: [{ model: UserModel, as: 'followeeInfo', attributes: ['id', 'name', 'avatar_url'] }],
+        limit: limitNumber,
+        offset: offset,
+      });
+  
+      const totalPages = Math.ceil(totalFollowing / limitNumber);
+      return sendSuccess(res, {
+        following,
+        pagination: {
+          totalFollowing,
+          totalPages,
+          currentPage: pageNumber,
+          limit: limitNumber,
+        },
+      });
+    } catch (error) {
+      sendError(res, 500, { errorCode: 133 }, error);
+    }
+  }
+  
 }
 
 export default new FollowerController();
