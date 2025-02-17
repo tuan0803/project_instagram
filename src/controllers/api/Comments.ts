@@ -88,7 +88,6 @@ class CommentController {
     } catch (error: any) {
       return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
     }
-  }
 
   public async delete(req: Request, res: Response) {
     try {
@@ -107,6 +106,17 @@ class CommentController {
     } catch (error: any) {
       return sendError(res, 500, 'Lỗi khi xóa bình luận', error.message || error);
     }
+
+    console.log(content, "content", id, "id");
+    const comment = await CommentModel.findByPk(Number(id));
+    if (!comment) {
+      return sendError(res, 404, 'Không tìm thấy bình luận');
+    }
+
+    await comment.update({ content });
+    return sendSuccess(res, comment, 'Cập nhật bình luận thành công');
+  } catch (error: any) {
+    return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
   }
 }
 

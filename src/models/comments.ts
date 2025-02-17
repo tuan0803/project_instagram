@@ -80,26 +80,71 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     byId(id: number) {
       return { where: { id } };
     },
-  };
+    async afterCreate(comment, options) {
+        const transaction = options.transaction || await CommentModel.sequelize!.transaction();
 
-  public static associate() {
-    this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post', onDelete: 'CASCADE', });
-    this.belongsToMany(HashtagModel, { through: CommentHashtagModel, foreignKey: 'commentId', otherKey: 'hashtagId', as: 'hashtags' });
-    this.belongsToMany(UserModel, { through: CommentTagModel, foreignKey: 'commentId', otherKey: 'userId', as: 'user' });
+        try {
+          await CommentModel.updateCommentCount(comment, transaction);
 
-    this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags', onDelete: 'CASCADE', });
-    this.hasMany(CommentHashtagModel, { foreignKey: 'commentId', as: 'commentHashtags', onDelete: 'CASCADE', });
-  }
+          if (!options.transaction) {
+            await transaction.commit();
+          }
+        } catch (error: any) {
+          if (!options.transaction) {
+            await transaction.rollback();
+          }
+          throw new Error(`Lỗi khi xử lý afterCreate của CommentModel: ${error.message}`);
+        }
+      },
+
+    async afterValidate(comment, options) {
+      },
+
+    async afterDestroy(comment, options) {
+        const transaction = options.transaction || await CommentModel.sequelize!.transaction();
+        try {
+          const postCommentCount = await CommentCountModel.findOne({
+            where: { postId: comment.postId },
+            transaction,
+          });
+          if (postCommentCount && postCommentCount.commentCount > 0) {
+            await postCommentCount.decrement('commentCount', { by: 1, transaction });
+          }
+          if (!options.transaction) {
+            await transaction.commit();
+          }
+        } catch (error: any) {
+          if (!options.transaction) {
+            await transaction.rollback();
+          }
+          throw new Error(`Lỗi khi xử lý afterDestroy của CommentModel: ${error.message}`);
+        }
+      },
+    };
+
+    static readonly scopes: ModelScopeOptions = {
+      byId(id: number) {
+        return { where: { id } };
+      },
+    };
+
+    public static associate() {
+      this.belongsTo(PostModel, { foreignKey: 'postId' });
+      this.belongsTo(CommentCountModel, { as: 'commentCount', foreignKey: 'postId' });
+
+      this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags' });
+      this.belongsTo(CommentModel, { foreignKey: 'parentId', as: 'parentComment' });
+    }
 
   static readonly validations = {
-    async validateId(id: number): Promise<CommentModel> {
-      const comment = await CommentModel.findByPk(id);
-      if (!comment) {
-        throw new ValidationError('Bình luận không tồn tại.');
-      }
-      return comment;
-    },
-  };
-}
+      async validateId(id: number): Promise<CommentModel> {
+        const comment = await CommentModel.findByPk(id);
+        if (!comment) {
+          throw new ValidationError('Bình luận không tồn tại.');
+        }
+        return comment;
+      },
+    };
+  }
 
 export default CommentModel;
