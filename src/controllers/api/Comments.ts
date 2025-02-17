@@ -3,7 +3,10 @@ import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
 import HashtagModel from '@models/hashtags';
 import CommentTagModel from '@models/commentTags';
+<<<<<<< HEAD
 import UserModel from '@models/users';
+=======
+>>>>>>> 08f9925 (include)
 
 class CommentController {
   public async get(req: Request, res: Response) {
@@ -33,6 +36,7 @@ class CommentController {
       return sendError(res, 500, 'Lỗi khi lấy danh sách bình luận', error.message || error);
     }
   }
+
 
   public async create(req: Request, res: Response) {
     try {
@@ -64,6 +68,7 @@ class CommentController {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
     }
   }
+
 
   public async update(req: Request, res: Response) {
     try {
@@ -107,17 +112,17 @@ class CommentController {
       return sendError(res, 500, 'Lỗi khi xóa bình luận', error.message || error);
     }
 
-    console.log(content, "content", id, "id");
-    const comment = await CommentModel.findByPk(Number(id));
-    if (!comment) {
-      return sendError(res, 404, 'Không tìm thấy bình luận');
-    }
+      console.log(content, "content", id, "id");
+      const comment = await CommentModel.findByPk(Number(id));
+      if (!comment) {
+        return sendError(res, 404, 'Không tìm thấy bình luận');
+      }
 
-    await comment.update({ content });
-    return sendSuccess(res, comment, 'Cập nhật bình luận thành công');
-  } catch (error: any) {
-    return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
+      await comment.update({ content });
+      return sendSuccess(res, comment, 'Cập nhật bình luận thành công');
+    } catch (error: any) {
+      return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
+    }
   }
-}
 
 export default new CommentController();
