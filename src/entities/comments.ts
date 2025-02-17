@@ -1,9 +1,9 @@
 import { DateTimeUtil } from '@libs/datetime';
-const { DataTypes } = require('sequelize');
+import { DataTypes } from 'sequelize';
 
 const commentEntity = {
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT.UNSIGNED,
     allowNull: false,
     autoIncrement: true,
     primaryKey: true,
@@ -38,7 +38,7 @@ const commentEntity = {
     type: DataTypes.DATE,
     allowNull: true,
     field: 'created_at',
-    get (): number {
+    get(): number {
       return this.getDataValue('created_at')
         ? DateTimeUtil.dateToMs(this.getDataValue('created_at'))
         : null;
