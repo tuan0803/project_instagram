@@ -179,8 +179,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     }
 
     public static associate() {
-        this.hasMany(PostModel, { foreignKey: 'userId', as: 'posts' });
-        this.belongsToMany(PostModel, { through: PostTagUserModel, foreignKey: 'userId', otherKey: 'postId', as: 'taggedPosts' });
+        this.hasMany(PostTagUserModel, { foreignKey: 'userId', as: 'taggedUsers' });
     }
 
     public toJSON () {

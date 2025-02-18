@@ -1,6 +1,8 @@
 import { Model, Sequelize } from 'sequelize';
 import PostTagUserEntity from '@entities/postTagUsers';
 import PostTagUserInterface from '@interfaces/postTagUsers';
+import PostModel from './posts';
+import UserModel from './users';
 
 class PostTagUserModel extends Model<PostTagUserInterface> implements PostTagUserInterface {
     public id: number;
@@ -15,7 +17,10 @@ class PostTagUserModel extends Model<PostTagUserInterface> implements PostTagUse
         });
     }
 
-    public static associate () {}
+    public static associate () {
+        this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post' });
+        this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });
+    }
 }
 
 export default PostTagUserModel;

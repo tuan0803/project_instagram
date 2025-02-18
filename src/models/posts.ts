@@ -6,6 +6,7 @@ import PostHashtagModel from './postHashtags';
 import HashtagModel from './hashtags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import PostTagUserModel from './postTagUsers';
+import MediaModel from './medias';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
@@ -24,17 +25,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         );
         post.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
       }
-    },
-    async afterCreate(post, options) {
-      const taggedUserIds = options.taggedUsers || [];
-      if (taggedUserIds.length > 0) {
-        const taggedUsers = taggedUserIds.map(userId => ({
-          postId: post.id,
-          userId
-        }));
-        await PostTagUserModel.bulkCreate(taggedUsers);
-      }
-    }           
+    },      
   };
 
   public static initialize (sequelize: Sequelize) {
@@ -48,7 +39,9 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
   public static associate() {
     this.belongsToMany(HashtagModel, { through: PostHashtagModel, foreignKey: 'postId', otherKey: 'hashtagId', as: 'hashtags' });
-    this.belongsToMany(UserModel, { through: PostTagUserModel, foreignKey: 'postId', otherKey: 'userId', as: 'taggedUsers' });
+    this.hasMany(MediaModel, { foreignKey: 'postId', as: 'media' });
+    this.hasMany(PostTagUserModel, { foreignKey: 'postId', as: 'taggedUsers' });
+    this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });
   }
 }
 
