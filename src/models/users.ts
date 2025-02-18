@@ -7,6 +7,7 @@ import { ModelHooks } from 'sequelize/types/lib/hooks';
 import Settings from '@configs/settings';
 import MailActive from '@services/mailer';
 import fs from 'fs';
+import PostTagUserModel from './postTagUsers';
 
 class UserModel extends Model<UserInterface> implements UserInterface {
     public id: number;
@@ -177,7 +178,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     }
 
     public static associate() {
-       
+        this.hasMany(PostTagUserModel, { foreignKey: 'userId', as: 'taggedUsers' });
     }
 
     public toJSON () {

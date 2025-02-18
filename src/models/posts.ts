@@ -1,59 +1,48 @@
-import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
+import { Model, Sequelize} from 'sequelize';
 import PostEntity from '@entities/posts';
 import PostInterface from '@interfaces/posts';
+import UserModel from './users';
+import PostHashtagModel from './postHashtags';
+import HashtagModel from './hashtags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
+import PostTagUserModel from './postTagUsers';
+import MediaModel from './medias';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
   public userId: number;
-  public text?: string;
+  public text: string;
   public createdAt: Date;
   public updatedAt: Date;
-  public commentCount?: number;
-  public reactionCount?: number;
 
-  static readonly NOTIFIABLE_TYPE_ENUM = {
-    SYSTEM: 'system',
-  };
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
-    async beforeCreate (record) {},
-    async afterCreate (record) {},
-  };
-
-  static readonly scopes: ModelScopeOptions = {
-    byId (id) {
-      return {
-        where: { id },
-      };
-    },
-    byUser (userId) {
-      return {
-        where: { userId },
-      };
-    },
-    bySorting (sortBy, sortOrder) {
-      return {
-        order: [[Sequelize.literal(sortBy), sortOrder]],
-      };
-    },
-    isUnRead () {
-      return {
-        where: { readAt: null },
-      };
-    },
+    async afterValidate(post, options) {
+      const hashtags = post.text.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
+      if (hashtags.length > 0) {
+        const allHashtags = await Promise.all(
+          hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
+        );
+        post.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
+      }
+    },      
   };
 
   public static initialize (sequelize: Sequelize) {
     this.init(PostEntity, {
       hooks: PostModel.hooks,
-      scopes: PostModel.scopes,
       tableName: 'posts',
+      timestamps: true,
       sequelize,
     });
   }
 
-  public static associate () {}
+  public static associate() {
+    this.belongsToMany(HashtagModel, { through: PostHashtagModel, foreignKey: 'postId', otherKey: 'hashtagId', as: 'hashtags' });
+    this.hasMany(MediaModel, { foreignKey: 'postId', as: 'media' });
+    this.hasMany(PostTagUserModel, { foreignKey: 'postId', as: 'taggedUsers' });
+    this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });
+  }
 }
 
 export default PostModel;
