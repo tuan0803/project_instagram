@@ -18,10 +18,7 @@ class CommentTagModel extends Model {
   }
 
   public static associate() {
-    this.belongsTo(CommentModel, { foreignKey: 'commentId', as: 'comment' });
-    this.belongsTo(UserModel, { foreignKey: 'userId', as: 'taggedUser' });
   }
-  
 }
 
 export default CommentTagModel;
