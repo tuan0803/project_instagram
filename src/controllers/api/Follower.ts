@@ -137,7 +137,28 @@ class FollowerController {
       sendError(res, 500, { errorCode: 133 }, error);
     }
   }
-  
+  public async removeFollower(req: Request, res: Response) {
+    try {
+      const currentUserId = req.currentUser.id;
+      const { followerId } = req.body;
+      const follower = await UserModel.findByPk(followerId);
+      if (!follower) {
+        return sendError(res, 404, NoData.message);
+      }
+
+      const followRecord = await FollowerModel.findOne({
+        where: { followeeId: currentUserId, followerId: followerId },
+      });
+
+      if (!followRecord) {
+        return sendError(res, 404, NoData.message);
+      }
+      await followRecord.destroy();  
+      return sendSuccess(res, { isSuccess: true });
+    } catch (error) {
+      sendError(res, 500, { errorCode: 134 }, error);
+    }
+  }
 }
 
 export default new FollowerController();
