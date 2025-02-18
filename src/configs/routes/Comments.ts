@@ -3,9 +3,9 @@ import CommentController from '@controllers/api/Comments';
 
 const router = Router();
 
-router.post('/create/:postId/:parentId?', CommentController.create);
-router.get('/get/:postId', CommentController.get);
-router.put('/update/:id', CommentController.update);
-router.delete('/delete/:id', CommentController.delete);
+router.post('/posts/:postId/comments', CommentController.create);
+router.get('/posts/:postId/comments', CommentController.get);
+router.put('/comments/:id', CommentController.update);
+router.delete('/comments/:id', CommentController.delete);
 
 export default router;
