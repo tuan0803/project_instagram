@@ -46,14 +46,11 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
         );
         comment.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
       }
-    },
-    async afterCreate(comment, options) {
-      const taggedUserIds = options.taggedUsers || [];
+
+      const taggedUserIds = comment.content.match(/@(\d+)/g)?.map(mention =>
+        mention.substring(1)).filter((value, index, self) => self.indexOf(value) === index)
       if (taggedUserIds.length > 0) {
-        const taggedUsers = taggedUserIds.map(userId => ({
-          commentId: comment.id,
-          userId
-        }));
+        comment.setDataValue('taggedUserIds', taggedUserIds);
       }
     },
   };
@@ -69,8 +66,8 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     this.belongsToMany(HashtagModel, { through: CommentHashtagModel, foreignKey: 'commentId', otherKey: 'hashtagId', as: 'hashtags' });
     this.belongsToMany(UserModel, { through: CommentTagModel, foreignKey: 'commentId', otherKey: 'userId', as: 'taggedUsers' });
 
-    this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags',onDelete: 'CASCADE', });
-    this.hasMany(CommentHashtagModel, { foreignKey: 'commentId', as: 'commentHashtags',onDelete: 'CASCADE', });
+    this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags', onDelete: 'CASCADE', });
+    this.hasMany(CommentHashtagModel, { foreignKey: 'commentId', as: 'commentHashtags', onDelete: 'CASCADE', });
   }
 
   static readonly validations = {
