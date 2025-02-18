@@ -1,7 +1,7 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
-import CommentModel from './comments';
 import HashtagEntity from '@entities/hashtags';
-
+import CommentHashtagModel from './commentHastags';
+import CommentModel from './comments';
 class HashtagModel extends Model {
     public id: number;
     public name: string;
@@ -15,7 +15,7 @@ class HashtagModel extends Model {
     }
 
     public static associate() {
-        this.hasMany(CommentModel, { foreignKey: 'id', as: 'comments' });
+        this.belongsToMany(CommentModel, { through: CommentHashtagModel, foreignKey: 'hashtagId', otherKey: 'commentId', as: 'comments' });
     }
 
 }

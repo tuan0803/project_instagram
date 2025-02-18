@@ -2,12 +2,11 @@ import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
 import HashtagModel from '@models/hashtags';
-import CommentTagModel from '@models/commentTags';
 
 class CommentController {
   public async get(req: Request, res: Response) {
     try {
-      const { postId } = req.params;
+      const { postId, id } = req.params;
       const { page = 1, limit = 16 } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
@@ -33,43 +32,31 @@ class CommentController {
     }
   }
 
-
   public async create(req: Request, res: Response) {
     try {
       const userId = req.currentUser?.userId ?? 1;
       const { postId, parentId } = req.params;
-      const { content, taggedUserIds = [], taggedHastagIds = [] } = req.fields || req.body;
-      const newComment = await CommentModel.create({
-        postId: postId,
-        userId: userId,
-        content,
-        parentId: parentId ? Number(parentId) : null,
-      },
+      const { content, taggedUserIds = [], } = req.fields || req.body;
+
+      const newComment = await CommentModel.create(
+        {
+          postId: postId,
+          userId: userId,
+          content,
+          parentId: parentId ? Number(parentId) : null,
+        },
         {
           include: [
-            {
-              model: HashtagModel,
-              as: 'hashtags',
-              through: {
-                where: { id: taggedHastagIds },
-              },
-            },
-            {
-              model: CommentTagModel,
-              as: 'commentTags',
-              through: {
-                where: { userId: taggedUserIds },
-              },
-            },
+            { model: HashtagModel, as: 'hashtags' },
           ],
-        });
-
+          taggedUsers: taggedUserIds,
+        },
+      );
       return sendSuccess(res, newComment, 'Tạo bình luận thành công');
     } catch (error: any) {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
     }
   }
-
 
   public async update(req: Request, res: Response) {
     try {

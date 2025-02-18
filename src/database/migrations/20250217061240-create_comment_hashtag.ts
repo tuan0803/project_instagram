@@ -1,6 +1,6 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('comment_tags', {
+    await queryInterface.createTable('comment_hashtags', {
       id: {
         type: Sequelize.BIGINT.UNSIGNED,
         autoIncrement: true,
@@ -13,30 +13,30 @@ module.exports = {
         references: {
           model: 'comments',
           key: 'id',
-          field: 'comment_id'
+          field: 'comment_id',
         },
         onDelete: 'CASCADE',
       },
-      userId: {
-        type: Sequelize.INTEGER,
+      hashtagId: {
+        type: Sequelize.BIGINT.UNSIGNED,
         allowNull: false,
         references: {
-          model: 'users',
+          model: 'hashtags',
           key: 'id',
-          field: 'user_id'
+          field: 'hashtag_id',
         },
         onDelete: 'CASCADE',
       },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-        field: 'created_at',
+        defaultValue: Sequelize.fn('NOW'),
+        field: 'created_at'
       },
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('comment_tags');
+    await queryInterface.dropTable('comment_hashtag');
   },
 };
