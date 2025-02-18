@@ -1,34 +1,34 @@
+'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('comment_tags', {
+    await queryInterface.createTable('likes', {
       id: {
-        type: Sequelize.BIGINT.UNSIGNED,
+        allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false,
+        type: Sequelize.INTEGER
       },
-      commentId: {
+      postId: {
         type: Sequelize.BIGINT.UNSIGNED,
         allowNull: false,
-        field: 'comment_id',
-        onDelete: 'CASCADE',
+        field: 'post_id',
+        onDelete: 'CASCADE'
       },
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         field: 'user_id',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       createdAt: {
-        type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-        field: 'created_at',
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+        field: 'created_at'
       },
     });
   },
-
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('comment_tags');
-  },
+    await queryInterface.dropTable('likes');
+  }
 };
