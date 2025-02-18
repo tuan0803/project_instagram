@@ -49,7 +49,10 @@ class LikeModel extends Model<LikeInterface> implements LikeInterface {
   public static associate() {
     this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post', onDelete: 'CASCADE' });
     this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE' });
+<<<<<<< HEAD
     
+=======
+>>>>>>> 3aa86ca (like)
   }
 }
 
