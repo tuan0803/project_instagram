@@ -2,7 +2,6 @@ import { Model, Sequelize } from 'sequelize';
 import HashtagsEntity from '@entities/hashtags';
 import HashtagInterface from '@interfaces/hashtags';
 import PostHashtagModel from './postHashtags';
-import PostModel from './posts';
 
 class HashtagModel extends Model<HashtagInterface> implements HashtagInterface {
     public id: number;
@@ -17,8 +16,7 @@ class HashtagModel extends Model<HashtagInterface> implements HashtagInterface {
     };
 
     public static associate() {
-        this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post' });
-        this.hasMany(PostHashtagModel, { foreignKey: 'hashtagId', as: 'postHashTags' });
+        this.hasMany(PostHashtagModel, { foreignKey: 'hashtagId', as: 'postHashtags' });
     }
       
 }

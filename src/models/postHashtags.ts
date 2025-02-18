@@ -15,12 +15,13 @@ class PostHashtagModel extends Model<PostHashtagInterface> implements PostHashta
             sequelize,
             tableName: 'post_hashtags',
             timestamps: false,
+            modelName: 'PostHashtagModel',
         });
     }
-
+    
     public static associate () {
-        this.belongsTo(HashtagModel, { foreignKey: 'hashtagId', as: 'hashtags' });
-        this.belongsTo(PostModel, { foreignKey: 'postId', as: 'posts' });
+        this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post' });
+        this.belongsTo(HashtagModel, { foreignKey: 'hashtagId', as: 'hashtag' });
     }
 }
 

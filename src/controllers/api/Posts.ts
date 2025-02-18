@@ -9,17 +9,59 @@ import UserModel from '@models/users';
 import PostTagUserModel from '@models/postTagUsers';
 import multer from 'multer';
 import FileUploaderService from '@services/fileUploader';
+import PostHashtagModel from '@models/postHashtags';
 const upload = multer({ storage: multer.memoryStorage() });
 
 
 class PostController {
+  public async index(req: Request, res: Response) {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      const pageNumber = Number(page);
+      const pageSize = Number(limit);
+
+      const posts = await PostModel.findAndCountAll({
+        include: [
+          { model: PostHashtagModel,
+            as: 'postHashtags',
+            include: [{ model: HashtagModel, as: 'hashtag' }],
+          },
+          {
+            model: MediaModel,
+            as: 'media',
+            include: [{ model: MediaTagsModel, as: 'mediaTags' }],
+          },
+          {
+            model: PostTagUserModel,
+            as: 'taggedUsers',
+            include: [{ model: UserModel, as: 'user' }],
+          },
+        ],
+        order: [['createdAt', 'DESC']],
+        offset: (pageNumber - 1) * pageSize,
+        limit: pageSize,
+      });
+
+      sendSuccess(res, { 
+        posts: posts.rows, 
+        pagination: { 
+          total: posts.count, 
+          page, 
+          limit, 
+          totalPages: Math.ceil(posts.count / Number(limit)) 
+        }
+      });
+      
+    } catch (error) { 
+      sendError(res, 500, InternalError, error.message);
+    }
+  }
   public async create(req: Request, res: Response) {
     upload.array('file', 6)(req, res, async (err) => {
       try {
         const userId = req.currentUser.id;
-        const { text, taggedUserIds = [], mediaTags = [] } = req.body;
+        const { text, mediaTags = [] } = req.body;
         let mediaItems: any = [];
-        const taggedUsers = JSON.parse(taggedUserIds).map(userId => ({ userId })) || [];
         const parsedMediaTags = Array.isArray(mediaTags) ? mediaTags : JSON.parse(mediaTags) || [];
         const filePaths = await Promise.all(
           (req.files as Express.Multer.File[]).map(async (file) => {
@@ -57,11 +99,13 @@ class PostController {
               type: media.type,
               mediaTags: media.mediaTags,
             })),
-            taggedUsers,
           },
           {
             include: [
-              { model: HashtagModel, as: 'hashtags' },
+              { model: PostHashtagModel,
+                as: 'postHashtags',
+                include: [{ model: HashtagModel, as: 'hashtag' }],
+              },
               {
                 model: MediaModel,
                 as: 'media',
