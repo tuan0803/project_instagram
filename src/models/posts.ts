@@ -24,7 +24,11 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         const allHashtags = await Promise.all(
           hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
         );
-        await post.set('hashtags', allHashtags.map(([hashtag]) => hashtag));
+        const hashtagsData = allHashtags.map(([hashtag]) => hashtag);
+        const postHashtags = hashtagsData.map(hashtag => ({
+          hashtagId: hashtag.id 
+        }));
+        await post.set('postHashtags', postHashtags);
       }
       if (taggedUserIds.length > 0) {
         const users = await Promise.all(
@@ -44,7 +48,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
           await post.set('taggedUsers', postTags);
         }
       }
-    },       
+    },  
   };
 
   public static initialize (sequelize: Sequelize) {
