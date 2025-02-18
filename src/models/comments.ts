@@ -5,12 +5,17 @@ import PostModel from './posts';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import CommentTagModel from './commentTags';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import HashtagModel from './hashtags';
 import CommentHashtagModel from './commentHastags';
 import UserModel from './users';
 import BannedHashtagModel from './bannedHashtags';
 =======
 import hashtagModel from './hashtags';
+=======
+import HashtagModel from './hashtags';
+import CommentHashtagModel from './commentHastags';
+>>>>>>> 1511fce (xong tag)
 import UserModel from './users';
 >>>>>>> 08f9925 (include)
 
@@ -37,7 +42,11 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
 
   static readonly hooks: Partial<ModelHooks<CommentModel>> = {
 <<<<<<< HEAD
+<<<<<<< HEAD
     async beforeValidate(comment, _options) {
+=======
+    async beforeValidate(comment, options) {
+>>>>>>> 1511fce (xong tag)
       if (comment.parentId) {
         const parentComment = await CommentModel.findByPk(comment.parentId);
         if (!parentComment) {
@@ -45,6 +54,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
         }
       }
     },
+<<<<<<< HEAD
     async afterValidate(comment, _options) {
       const hashtags = comment.content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
       if (hashtags.length > 0) {
@@ -89,6 +99,26 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     async afterCreate(comment, options) {
         const transaction = options.transaction || await CommentModel.sequelize!.transaction();
 =======
+=======
+    async afterValidate(comment, options) {
+      const hashtags = comment.content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
+      if (hashtags.length > 0) {
+        const allHashtags = await Promise.all(
+          hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
+        );
+        comment.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
+      }
+    },
+    async afterCreate(comment, options) {
+      const taggedUserIds = options.taggedUsers || [];
+      if (taggedUserIds.length > 0) {
+        const taggedUsers = taggedUserIds.map(userId => ({
+          commentId: comment.id,
+          userId
+        }));
+      }
+    },
+>>>>>>> 1511fce (xong tag)
   };
 
   static readonly scopes: ModelScopeOptions = {
@@ -99,13 +129,12 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
 >>>>>>> 08f9925 (include)
 
   public static associate() {
-    this.belongsTo(PostModel, { foreignKey: 'postId' });
+    this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post', onDelete: 'CASCADE', });
+    this.belongsToMany(HashtagModel, { through: CommentHashtagModel, foreignKey: 'commentId', otherKey: 'hashtagId', as: 'hashtags' });
+    this.belongsToMany(UserModel, { through: CommentTagModel, foreignKey: 'commentId', otherKey: 'userId', as: 'taggedUsers' });
 
-    this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags' });
-    this.belongsTo(CommentModel, { foreignKey: 'parentId', as: 'parentComment' });
-
-    this.hasMany(hashtagModel, { foreignKey: 'id', as: 'hashtags' });
-    this.belongsToMany(UserModel, { through: CommentTagModel, foreignKey: 'commentId', otherKey: 'userId', as: 'taggedUsers', });
+    this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags',onDelete: 'CASCADE', });
+    this.hasMany(CommentHashtagModel, { foreignKey: 'commentId', as: 'commentHashtags',onDelete: 'CASCADE', });
   }
 
   static readonly validations = {

@@ -2,16 +2,19 @@ import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
 import HashtagModel from '@models/hashtags';
+<<<<<<< HEAD
 import CommentTagModel from '@models/commentTags';
 <<<<<<< HEAD
 import UserModel from '@models/users';
 =======
 >>>>>>> 08f9925 (include)
+=======
+>>>>>>> 1511fce (xong tag)
 
 class CommentController {
   public async get(req: Request, res: Response) {
     try {
-      const { postId } = req.params;
+      const { postId, id } = req.params;
       const { page = 1, limit = 16 } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
@@ -37,12 +40,16 @@ class CommentController {
     }
   }
 
-
   public async create(req: Request, res: Response) {
     try {
       const userId = req.currentUser?.userId ?? 1;
+<<<<<<< HEAD
       const { postId, } = req.params;
       const { content, parentId } = req.fields || req.body;
+=======
+      const { postId, parentId } = req.params;
+      const { content, taggedUserIds = [], } = req.fields || req.body;
+>>>>>>> 1511fce (xong tag)
 
       const newComment = await CommentModel.create(
         {
@@ -54,6 +61,7 @@ class CommentController {
         {
           include: [
             { model: HashtagModel, as: 'hashtags' },
+<<<<<<< HEAD
             {
               model: CommentTagModel,
               as: 'commentTags',
@@ -63,12 +71,17 @@ class CommentController {
         },
       );
 
+=======
+          ],
+          taggedUsers: taggedUserIds,
+        },
+      );
+>>>>>>> 1511fce (xong tag)
       return sendSuccess(res, newComment, 'Tạo bình luận thành công');
     } catch (error: any) {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
     }
   }
-
 
   public async update(req: Request, res: Response) {
     try {

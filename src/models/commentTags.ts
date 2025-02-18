@@ -24,11 +24,12 @@ class CommentTagModel extends Model {
   }
 =======
   public static associate() {
-    this.belongsTo(CommentModel, { foreignKey: 'commentId', as: 'comment' });
-    this.belongsTo(UserModel, { foreignKey: 'userId', as: 'taggedUser' });
   }
+<<<<<<< HEAD
   
 >>>>>>> 37243e4 (comment)
+=======
+>>>>>>> 1511fce (xong tag)
 }
 
 export default CommentTagModel;
