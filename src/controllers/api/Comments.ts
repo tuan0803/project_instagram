@@ -3,6 +3,7 @@ import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
 import HashtagModel from '@models/hashtags';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import CommentTagModel from '@models/commentTags';
 <<<<<<< HEAD
 import UserModel from '@models/users';
@@ -10,11 +11,14 @@ import UserModel from '@models/users';
 >>>>>>> 08f9925 (include)
 =======
 >>>>>>> 1511fce (xong tag)
+=======
+import CommentTagModel from '@models/commentTags';
+>>>>>>> 1e54a5d (fix comment)
 
 class CommentController {
   public async get(req: Request, res: Response) {
     try {
-      const { postId, id } = req.params;
+      const { postId } = req.params;
       const { page = 1, limit = 16 } = req.query;
       const offset = (Number(page) - 1) * Number(limit);
 
@@ -44,12 +48,17 @@ class CommentController {
     try {
       const userId = req.currentUser?.userId ?? 1;
 <<<<<<< HEAD
+<<<<<<< HEAD
       const { postId, } = req.params;
       const { content, parentId } = req.fields || req.body;
 =======
       const { postId, parentId } = req.params;
       const { content, taggedUserIds = [], } = req.fields || req.body;
 >>>>>>> 1511fce (xong tag)
+=======
+      const { postId, } = req.params;
+      const { content, parentId } = req.fields || req.body;
+>>>>>>> 1e54a5d (fix comment)
 
       const newComment = await CommentModel.create(
         {
@@ -62,6 +71,7 @@ class CommentController {
           include: [
             { model: HashtagModel, as: 'hashtags' },
 <<<<<<< HEAD
+<<<<<<< HEAD
             {
               model: CommentTagModel,
               as: 'commentTags',
@@ -72,8 +82,10 @@ class CommentController {
       );
 
 =======
+=======
+            { model: CommentTagModel, as: 'commentTags' },
+>>>>>>> 1e54a5d (fix comment)
           ],
-          taggedUsers: taggedUserIds,
         },
       );
 >>>>>>> 1511fce (xong tag)
