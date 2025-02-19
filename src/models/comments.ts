@@ -40,8 +40,6 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
       }
     },
     async afterValidate(comment, _options) {
-      console.log('Dữ liệu comment trước khi lưu:', comment.get());
-
       const hashtags = comment.content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
       if (hashtags.length > 0) {
         const banned = await BannedHashtagModel.findAll({ where: { hashtag: hashtags } });
