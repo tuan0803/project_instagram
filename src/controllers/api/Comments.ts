@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
-import HashtagModel from '@models/hashtags';
+import CommentHashtagModel from '@models/commentHastags';
 import CommentTagModel from '@models/commentTags';
+import HashtagModel from '@models/hashtags';
+import UserModel from '@models/users';
 
 class CommentController {
   public async get(req: Request, res: Response) {
@@ -16,19 +18,19 @@ class CommentController {
         order: [['createdAt', 'DESC']],
         limit: Number(limit),
         offset,
+        include: [
+          { model: UserModel, attributes: ['id', 'name', 'avatar_url'], as: 'users' },
+          { model: CommentTagModel, as: 'commentTags' },
+          { model: HashtagModel, as: 'hashtags' },
+          { model: CommentHashtagModel, as: 'commentHashtags' },
+        ],
       });
-      const totalPages = Math.ceil(count / Number(limit));
 
       return sendSuccess(res, {
         comments: rows,
-        pagination: {
-          currentPage: Number(page),
-          totalPages,
-          limit: Number(limit),
-          totalComments: count,
-        },
+        pagination: { currentPage: Number(page), totalPages: Math.ceil(count / Number(limit)), total: count },
       }, 'Lấy danh sách bình luận thành công');
-    } catch (error: any) {
+    } catch (error) {
       return sendError(res, 500, 'Lỗi khi lấy danh sách bình luận', error.message || error);
     }
   }
@@ -36,73 +38,81 @@ class CommentController {
   public async create(req: Request, res: Response) {
     try {
       const userId = req.currentUser?.userId ?? 1;
-      const { postId, } = req.params;
+      const { postId } = req.params;
       const { content, parentId } = req.fields || req.body;
 
-      const newComment = await CommentModel.create(
-        {
-          postId: postId,
-          userId: userId,
-          content,
-          parentId: parentId ? Number(parentId) : null,
-        },
-        {
-          include: [
-            { model: HashtagModel, as: 'hashtags' },
-            { model: CommentTagModel, as: 'commentTags' },
-          ],
-        },
-      );
-      return sendSuccess(res, newComment, 'Tạo bình luận thành công');
-    } catch (error: any) {
+      const newComment = await CommentModel.create({
+        postId,
+        userId,
+        content,
+        parentId: parentId ? Number(parentId) : null,
+      });
+
+      const comment = await CommentModel.findByPk(newComment.id, {
+        include: [
+          { model: UserModel, attributes: ['id', 'name', 'avatar_url'], as: 'users' },
+          { model: CommentTagModel, attributes: ['id', 'comment_id', 'user_id'], as: 'commentTags' },
+          { model: HashtagModel, attributes: ['id'], as: 'hashtags' },
+          { model: CommentHashtagModel, attributes: ['id', 'comment_id', 'hashtag_id'], as: 'commentHashtags' },
+        ],
+      });
+
+      return sendSuccess(res, comment, 'Tạo bình luận thành công');
+    } catch (error) {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
     }
   }
 
   public async update(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      if (isNaN(Number(id))) {
-        return sendError(res, 400, 'ID bình luận không hợp lệ');
-      }
 
+      const { id: commentId } = req.params;
+      const userId = req.currentUser?.userId ?? 1;
       const { content } = req.fields || req.body;
-      if (!content) {
-        return sendError(res, 400, 'Nội dung bình luận không được để trống');
+      const commentInstance = await CommentModel.findOne({ where: { id: commentId, userId } });
+      if (!commentInstance) {
+        return sendError(res, 404, 'Không tìm thấy bình luận hoặc bạn không có quyền cập nhật.');
       }
 
-      console.log(content, "content", id, "id");
-      const comment = await CommentModel.findByPk(Number(id));
-      if (!comment) {
-        return sendError(res, 404, 'Không tìm thấy bình luận');
-      }
+      commentInstance.content = content;
+      await commentInstance.save();
 
-      await comment.update({ content });
-      return sendSuccess(res, comment, 'Cập nhật bình luận thành công');
-    } catch (error: any) {
+      const updatedComment = await CommentModel.findByPk(Number(commentId), {
+        include: [
+          { model: UserModel, attributes: ['id', 'name', 'avatar_url'], as: 'users' },
+          { model: CommentTagModel, attributes: ['id', 'comment_id', 'user_id'], as: 'commentTags' },
+          { model: HashtagModel, attributes: ['id'], as: 'hashtags' },
+          { model: CommentHashtagModel, attributes: ['id', 'comment_id', 'hashtag_id'], as: 'commentHashtags' },
+        ],
+      });
+
+      return sendSuccess(res, updatedComment, 'Cập nhật bình luận thành công');
+    } catch (error) {
       return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
     }
   }
 
+
   public async delete(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      if (isNaN(Number(id))) {
-        return sendError(res, 400, 'ID bình luận không hợp lệ');
-      }
+      const { id: commentId } = req.params;
+      const userId = req.currentUser?.userId ?? 1;
+      const comment = await CommentModel.findByPk(commentId, {
+        include: [
+          { model: CommentTagModel, as: 'commentTags' },
+          { model: CommentHashtagModel, as: 'commentHashtags' }
+        ],
+      });
 
-      const comment = await CommentModel.findByPk(Number(id));
-      if (!comment) {
-        return sendError(res, 404, 'Không tìm thấy bình luận');
-      }
-
+      await CommentTagModel.destroy({ where: { commentId } });
+      await CommentHashtagModel.destroy({ where: { commentId } });
       await comment.destroy();
-      return sendSuccess(res, null, 'Xóa bình luận thành công');
-    } catch (error: any) {
+
+      return sendSuccess(res, {}, 'Xóa bình luận thành công');
+    } catch (error) {
       return sendError(res, 500, 'Lỗi khi xóa bình luận', error.message || error);
     }
   }
-
 }
 
 export default new CommentController();

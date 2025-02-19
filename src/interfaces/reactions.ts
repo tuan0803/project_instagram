@@ -1,8 +1,8 @@
-interface LikeInterface {
+interface ReactionInterface {
     id: number;
     postId: number;
     userId: number;
     createdAt?: Date;
 };
 
-export default LikeInterface;
+export default ReactionInterface;

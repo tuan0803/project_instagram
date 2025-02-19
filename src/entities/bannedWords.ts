@@ -1,22 +1,18 @@
 import { DateTimeUtil } from '@libs/datetime';
 import { DataTypes } from 'sequelize';
 
-const LikeEntity = {
+const BannedWordsEntity = {
     id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
     },
-    postId: {
-        type: DataTypes.BIGINT.UNSIGNED,
+    words: {
+        type: DataTypes.STRING(255),
         allowNull: false,
-        field: 'post_id',
-    },
-    userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'user_id',
+        field: 'words',
+        unique: true,
     },
     createdAt: {
         type: DataTypes.DATE,
@@ -30,4 +26,4 @@ const LikeEntity = {
     },
 };
 
-export default LikeEntity;
+export default BannedWordsEntity;

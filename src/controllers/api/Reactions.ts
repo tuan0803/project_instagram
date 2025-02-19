@@ -7,7 +7,7 @@ class LikeController {
   public async get(req: Request, res: Response) {
     try {
       const { postId } = req.params;
-      const likes = await LikeModel.findAll({
+      const likes = await LikeModel.findAndCountAll({
         where: { postId },
         include: [{ model: UserModel, as: 'user', attributes: ['id', 'name', 'avatar_url'] }],
       });
