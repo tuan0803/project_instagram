@@ -16,10 +16,8 @@ class CommentHashtagModel extends Model {
             timestamps: false,
         });
     }
-
     public static associate() {
     }
-
 }
 
 export default CommentHashtagModel;

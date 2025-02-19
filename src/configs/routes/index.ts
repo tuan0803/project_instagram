@@ -13,6 +13,7 @@ import Profiles from './Profiles'
 import Users from './Users'
 import Comments from './Comments'
 import Likes from './Likes';
+import BannedHashtags from './BannedHashtags';
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
@@ -26,5 +27,7 @@ router.use('/passwords', passport.authenticate('jwt', { session: false }), Passw
 router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 router.use('/comments', Comments);
 router.use('/likes', Likes);
+router.use('/bannedhashtags', BannedHashtags);
+
 
 export default router;

@@ -3,6 +3,7 @@ import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
 import HashtagModel from '@models/hashtags';
 import CommentTagModel from '@models/commentTags';
+import UserModel from '@models/users';
 
 class CommentController {
   public async get(req: Request, res: Response) {
@@ -49,10 +50,15 @@ class CommentController {
         {
           include: [
             { model: HashtagModel, as: 'hashtags' },
-            { model: CommentTagModel, as: 'commentTags' },
+            {
+              model: CommentTagModel,
+              as: 'commentTags',
+              include: [{ model: UserModel, as: 'user' }],
+            },
           ],
         },
       );
+
       return sendSuccess(res, newComment, 'Tạo bình luận thành công');
     } catch (error: any) {
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
@@ -102,7 +108,6 @@ class CommentController {
       return sendError(res, 500, 'Lỗi khi xóa bình luận', error.message || error);
     }
   }
-
 }
 
 export default new CommentController();

@@ -7,6 +7,7 @@ import CommentTagModel from './commentTags';
 import HashtagModel from './hashtags';
 import CommentHashtagModel from './commentHastags';
 import UserModel from './users';
+import BannedHashtagModel from './bannedHashtags';
 
 class CommentModel extends Model<CommentInterface> implements CommentInterface {
   public id: number;
@@ -30,7 +31,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
   }
 
   static readonly hooks: Partial<ModelHooks<CommentModel>> = {
-    async beforeValidate(comment, options) {
+    async beforeValidate(comment, _options) {
       if (comment.parentId) {
         const parentComment = await CommentModel.findByPk(comment.parentId);
         if (!parentComment) {
@@ -38,19 +39,41 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
         }
       }
     },
-    async afterValidate(comment, options) {
+    async afterValidate(comment, _options) {
+      console.log('Dữ liệu comment trước khi lưu:', comment.get());
+
       const hashtags = comment.content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
       if (hashtags.length > 0) {
+        const banned = await BannedHashtagModel.findAll({ where: { hashtag: hashtags } });
+        if (banned.length > 0) {
+          throw new Error(`Bình luận chứa hashtag bị cấm: ${banned.map(tag => `#${tag.hashtag}`).join(", ")}`);
+        }
         const allHashtags = await Promise.all(
           hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
         );
-        comment.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
+        if (allHashtags.length > 0) {
+          comment.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
+        }
       }
-
-      const taggedUserIds = comment.content.match(/@(\d+)/g)?.map(mention =>
-        mention.substring(1)).filter((value, index, self) => self.indexOf(value) === index)
+    
+      const taggedUserIds = comment.content.match(/@(\d+)/g)?.map(tag => tag.slice(1)) || [];
       if (taggedUserIds.length > 0) {
-        comment.setDataValue('taggedUserIds', taggedUserIds);
+        const users = await Promise.all(
+          taggedUserIds.map(userId => 
+            UserModel.findOne({ 
+              where: { id: userId }, 
+              attributes: ['id'] 
+            })
+          )
+        );
+        const validUsers = users.filter(user => user !== null);
+  
+        if (validUsers.length > 0) {
+          const commentTags = validUsers.map(user => ({ 
+            userId: user.id
+          }));
+          comment.set('commentTags', commentTags);
+        }
       }
     },
   };
@@ -64,7 +87,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
   public static associate() {
     this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post', onDelete: 'CASCADE', });
     this.belongsToMany(HashtagModel, { through: CommentHashtagModel, foreignKey: 'commentId', otherKey: 'hashtagId', as: 'hashtags' });
-    this.belongsToMany(UserModel, { through: CommentTagModel, foreignKey: 'commentId', otherKey: 'userId', as: 'taggedUsers' });
+    this.belongsToMany(UserModel, { through: CommentTagModel, foreignKey: 'commentId', otherKey: 'userId', as: 'user' });
 
     this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags', onDelete: 'CASCADE', });
     this.hasMany(CommentHashtagModel, { foreignKey: 'commentId', as: 'commentHashtags', onDelete: 'CASCADE', });

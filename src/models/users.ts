@@ -179,7 +179,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     }
 
     public static associate() {
-        this.hasMany(CommentTagModel, { foreignKey: 'userId' });
+        this.hasMany(CommentTagModel, { foreignKey: 'userId' , as: 'taggedUsers'});
     }
 
     public toJSON() {
