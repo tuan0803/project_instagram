@@ -17,7 +17,6 @@ class BannedHashtagModel extends Model<BannerHashtagInterface> implements Banner
         });
     };
 
-
     static readonly hooks: Partial<ModelHooks<BannedHashtagModel>> = {
         async beforeValidate(bannedHashtag, _options) {
         },
