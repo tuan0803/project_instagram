@@ -9,7 +9,7 @@ class LikeController {
       const { postId } = req.params;
       const likes = await LikeModel.findAll({
         where: { postId },
-        include: [{ model: UserModel, as: 'user', attributes: ['id', 'username', 'avatar_url'] }],
+        include: [{ model: UserModel, as: 'user', attributes: ['id', 'name', 'avatar_url'] }],
       });
 
       return sendSuccess(res, likes, 'Lấy danh sách người đã like thành công');
