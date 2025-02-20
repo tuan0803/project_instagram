@@ -10,37 +10,13 @@ module.exports = {
       commentId: {
         type: Sequelize.BIGINT.UNSIGNED,
         allowNull: false,
-<<<<<<< HEAD
-<<<<<<< HEAD
         field: 'comment_id',
-=======
-        references: {
-          model: 'comments',
-          key: 'id',
-          field: 'comment_id'
-        },
->>>>>>> 1511fce (xong tag)
-=======
-        field: 'comment_id',
->>>>>>> 3aa86ca (like)
         onDelete: 'CASCADE',
       },
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
-<<<<<<< HEAD
-<<<<<<< HEAD
         field: 'user_id',
-=======
-        references: {
-          model: 'users',
-          key: 'id',
-          field: 'user_id'
-        },
->>>>>>> 1511fce (xong tag)
-=======
-        field: 'user_id',
->>>>>>> 3aa86ca (like)
         onDelete: 'CASCADE',
       },
       createdAt: {

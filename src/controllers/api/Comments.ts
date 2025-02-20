@@ -1,25 +1,10 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
-<<<<<<< HEAD
-import HashtagModel from '@models/hashtags';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import CommentTagModel from '@models/commentTags';
-<<<<<<< HEAD
-=======
 import CommentHashtagModel from '@models/commentHastags';
 import CommentTagModel from '@models/commentTags';
 import HashtagModel from '@models/hashtags';
->>>>>>> a652d66 (loi tao bang trung gian)
 import UserModel from '@models/users';
-=======
->>>>>>> 08f9925 (include)
-=======
->>>>>>> 1511fce (xong tag)
-=======
-import CommentTagModel from '@models/commentTags';
->>>>>>> 1e54a5d (fix comment)
 
 class CommentController {
   public async get(req: Request, res: Response) {
@@ -53,56 +38,9 @@ class CommentController {
   public async create(req: Request, res: Response) {
     try {
       const userId = req.currentUser?.userId ?? 1;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-      const { postId, } = req.params;
-=======
       const { postId } = req.params;
->>>>>>> a652d66 (loi tao bang trung gian)
       const { content, parentId } = req.fields || req.body;
-=======
-      const { postId, parentId } = req.params;
-      const { content, taggedUserIds = [], } = req.fields || req.body;
->>>>>>> 1511fce (xong tag)
-=======
-      const { postId, } = req.params;
-      const { content, parentId } = req.fields || req.body;
->>>>>>> 1e54a5d (fix comment)
 
-<<<<<<< HEAD
-      const newComment = await CommentModel.create(
-        {
-          postId: postId,
-          userId: userId,
-          content,
-          parentId: parentId ? Number(parentId) : null,
-        },
-        {
-          include: [
-            { model: HashtagModel, as: 'hashtags' },
-<<<<<<< HEAD
-<<<<<<< HEAD
-            {
-              model: CommentTagModel,
-              as: 'commentTags',
-              include: [{ model: UserModel, as: 'user' }],
-            },
-          ],
-        },
-      );
-
-=======
-=======
-            { model: CommentTagModel, as: 'commentTags' },
->>>>>>> 1e54a5d (fix comment)
-          ],
-        },
-      );
->>>>>>> 1511fce (xong tag)
-      return sendSuccess(res, newComment, 'Tạo bình luận thành công');
-    } catch (error: any) {
-=======
       const newComment = await CommentModel.create({
         postId,
         userId,
@@ -121,7 +59,6 @@ class CommentController {
 
       return sendSuccess(res, comment, 'Tạo bình luận thành công');
     } catch (error) {
->>>>>>> a652d66 (loi tao bang trung gian)
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
     }
   }
@@ -157,6 +94,7 @@ class CommentController {
     } catch (error) {
       return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
     }
+  }
 
   public async delete(req: Request, res: Response) {
     try {
@@ -184,18 +122,7 @@ class CommentController {
     } catch (error) {
       return sendError(res, 500, 'Lỗi khi xóa bình luận', error.message || error);
     }
-
-      console.log(content, "content", id, "id");
-      const comment = await CommentModel.findByPk(Number(id));
-      if (!comment) {
-        return sendError(res, 404, 'Không tìm thấy bình luận');
-      }
-
-      await comment.update({ content });
-      return sendSuccess(res, comment, 'Cập nhật bình luận thành công');
-    } catch (error: any) {
-      return sendError(res, 500, 'Lỗi khi cập nhật bình luận', error.message || error);
-    }
   }
+}
 
 export default new CommentController();
