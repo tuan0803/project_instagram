@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import LikeController from '@controllers/api/Likes';
+import LikeController from '@controllers/api/Reactions';
 
 const router = Router();
 

@@ -30,14 +30,17 @@ class HashtagModel extends Model {
 <<<<<<< HEAD
 <<<<<<< HEAD
         this.belongsToMany(CommentModel, { through: CommentHashtagModel, foreignKey: 'hashtagId', otherKey: 'commentId', as: 'comments' });
+<<<<<<< HEAD
 =======
         this.hasMany(CommentModel, { foreignKey: 'id', as: 'comments' });
 >>>>>>> 08f9925 (include)
 =======
         this.belongsToMany(CommentModel, { through: CommentHashtagModel, foreignKey: 'hashtagId', otherKey: 'commentId', as: 'comments' });
 >>>>>>> 1511fce (xong tag)
+=======
+        this.hasMany(CommentHashtagModel, { foreignKey: 'hashtagId' , as: 'commentHashtags'});
+>>>>>>> a652d66 (loi tao bang trung gian)
     }
-
 }
 
 export default HashtagModel;

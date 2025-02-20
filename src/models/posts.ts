@@ -55,7 +55,6 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   }
 
   public static associate () {
-    this.hasMany(LikeModel, { foreignKey: 'postId', onDelete: 'CASCADE' });
   }
 }
 

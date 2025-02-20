@@ -12,8 +12,12 @@ passportJwt(passport);
 import Profiles from './Profiles'
 import Users from './Users'
 import Comments from './Comments'
+<<<<<<< HEAD
 import Likes from './Likes';
 <<<<<<< HEAD
+=======
+import Likes from './Reactions';
+>>>>>>> a652d66 (loi tao bang trung gian)
 import BannedHashtags from './BannedHashtags';
 =======
 >>>>>>> 1e54a5d (fix comment)

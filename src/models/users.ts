@@ -180,10 +180,15 @@ class UserModel extends Model<UserInterface> implements UserInterface {
 
     public static associate() {
 <<<<<<< HEAD
+<<<<<<< HEAD
         this.hasMany(CommentTagModel, { foreignKey: 'userId' , as: 'taggedUsers'});
 =======
         this.hasMany(CommentTagModel, { foreignKey: 'userId' });
 >>>>>>> 1511fce (xong tag)
+=======
+        this.hasMany(CommentTagModel, { foreignKey: 'userId' , as: 'commentTags' });
+        this.belongsToMany(CommentModel, { through: CommentTagModel, foreignKey: 'userId', otherKey: 'commentId', as: 'comments' });
+>>>>>>> a652d66 (loi tao bang trung gian)
     }
 
     public toJSON() {

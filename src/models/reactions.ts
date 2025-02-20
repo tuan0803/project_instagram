@@ -1,6 +1,6 @@
 import { Model, Sequelize, ModelScopeOptions, ValidationError } from 'sequelize';
-import LikeEntity from '@entities/likes';
-import LikeInterface from '@interfaces/likes';
+import LikeEntity from '@entities/reactions';
+import LikeInterface from '@interfaces/reactions';
 import PostModel from './posts';
 import UserModel from './users';
 
@@ -49,10 +49,6 @@ class LikeModel extends Model<LikeInterface> implements LikeInterface {
   public static associate() {
     this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post', onDelete: 'CASCADE' });
     this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user', onDelete: 'CASCADE' });
-<<<<<<< HEAD
-    
-=======
->>>>>>> 3aa86ca (like)
   }
 }
 
