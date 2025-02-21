@@ -21,9 +21,9 @@ module.exports = {
       },
       createdAt: {
         type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.fn('NOW'),
-        field: 'created_at'
+        allowNull: true,
+        field: 'created_at',
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },

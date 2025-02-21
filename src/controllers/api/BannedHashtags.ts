@@ -50,7 +50,6 @@ class BannedHashtagController {
       return sendError(res, 500, 'Lỗi khi xóa hashtag bị cấm', error.message || error);
     }
   }
-  
 }
 
 export default new BannedHashtagController();

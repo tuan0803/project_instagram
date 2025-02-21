@@ -1,16 +1,16 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable("banned_hashtags", {
+    await queryInterface.createTable("banned_words", {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
         allowNull: false,
       },
-      hashtag: {
+      words: {
         type: Sequelize.STRING,
         allowNull: false,
-        field: 'hashtag',
+        field: 'words',
         unique: true,
       },
       createdAt: {
@@ -23,6 +23,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable("banned_hashtags");
+    await queryInterface.dropTable("banned_words");
   },
 };

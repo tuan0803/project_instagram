@@ -65,28 +65,24 @@ class CommentController {
 
   public async update(req: Request, res: Response) {
     try {
-      const { commentId } = req.params;
+
+      const { id: commentId } = req.params;
       const userId = req.currentUser?.userId ?? 1;
       const { content } = req.fields || req.body;
-
-      if (!content?.trim()) {
-        return sendError(res, 400, 'Nội dung bình luận không được để trống.');
-      }
-      const comment = await CommentModel.findByPk(commentId);
-      if (!comment) {
-        return sendError(res, 404, 'Không tìm thấy bình luận.');
-      }
-      if (comment.userId !== userId) {
-        return sendError(res, 403, 'Bạn không có quyền chỉnh sửa bình luận này.');
+      const commentInstance = await CommentModel.findOne({ where: { id: commentId, userId } });
+      if (!commentInstance) {
+        return sendError(res, 404, 'Không tìm thấy bình luận hoặc bạn không có quyền cập nhật.');
       }
 
-      await comment.update({ content });
-      const updatedComment = await CommentModel.findByPk(commentId, {
+      commentInstance.content = content;
+      await commentInstance.save();
+
+      const updatedComment = await CommentModel.findByPk(Number(commentId), {
         include: [
           { model: UserModel, attributes: ['id', 'name', 'avatar_url'], as: 'users' },
-          { model: CommentTagModel, as: 'commentTags' },
-          { model: HashtagModel, as: 'hashtags' },
-          { model: CommentHashtagModel, as: 'commentHashtags' }
+          { model: CommentTagModel, attributes: ['id', 'comment_id', 'user_id'], as: 'commentTags' },
+          { model: HashtagModel, attributes: ['id'], as: 'hashtags' },
+          { model: CommentHashtagModel, attributes: ['id', 'comment_id', 'hashtag_id'], as: 'commentHashtags' },
         ],
       });
 
@@ -96,9 +92,10 @@ class CommentController {
     }
   }
 
+
   public async delete(req: Request, res: Response) {
     try {
-      const { commentId } = req.params;
+      const { id: commentId } = req.params;
       const userId = req.currentUser?.userId ?? 1;
       const comment = await CommentModel.findByPk(commentId, {
         include: [
@@ -106,13 +103,6 @@ class CommentController {
           { model: CommentHashtagModel, as: 'commentHashtags' }
         ],
       });
-
-      if (!comment) {
-        return sendError(res, 404, 'Không tìm thấy bình luận.');
-      }
-      if (comment.userId !== userId) {
-        return sendError(res, 403, 'Bạn không có quyền xóa bình luận này.');
-      }
 
       await CommentTagModel.destroy({ where: { commentId } });
       await CommentHashtagModel.destroy({ where: { commentId } });

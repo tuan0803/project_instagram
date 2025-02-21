@@ -1,4 +1,4 @@
-import { Model, Sequelize, ValidationError } from 'sequelize';
+import { Model, Sequelize, Transaction, ValidationError } from 'sequelize';
 import CommentEntity from '@entities/comments';
 import CommentInterface from '@interfaces/comments';
 import PostModel from './posts';
@@ -20,45 +20,70 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     this.init(CommentEntity, {
       tableName: 'comments',
       sequelize,
-      timestamps: true,
+      timestamps: false,
+      hooks: this.hooks,
     });
   }
 
   static readonly hooks = {
+    async afterFind(comments) {
+      if (!comments) return;
+      const commentList = Array.isArray(comments) ? comments : [comments];
+
+      for (const comment of commentList) {
+        const hashtags = await comment.getHashtags(); 
+        let updatedContent = comment.content;
+        for (const hashtag of hashtags) {
+          const regex = new RegExp(`#${hashtag.name}\\b`, "g"); 
+          updatedContent = updatedContent.replace(regex, `#${hashtag.id}`);
+        }
+
+        comment.setDataValue('content', updatedContent);
+      }
+    },
+    
     async beforeValidate(comment, options) {
-      if (!comment.content?.trim()) {
-        throw new ValidationError('Nội dung bình luận không được để trống.');
-      }
-
-      if (comment.parentId) {
-        const parentComment = await CommentModel.findByPk(comment.parentId, { transaction: options.transaction });
-        if (!parentComment) {
-          throw new ValidationError('Bình luận cha không hợp lệ.');
-        }
-      }
-
-      const hashtags = comment.content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
-      if (hashtags.length > 0) {
-        const banned = await BannedHashtagModel.findAll({ where: { hashtag: hashtags }, transaction: options.transaction });
-        if (banned.length > 0) {
-          throw new ValidationError(`Bình luận chứa hashtag bị cấm: ${banned.map(tag => `#${tag.hashtag}`).join(", ")}`);
-        }
-      }
+      const { hashtags, taggedUserIds } = await CommentModel.validation(
+        comment.content,
+        comment.parentId,
+        options.transaction
+      );
 
       comment.setDataValue('_hashtags', hashtags);
-      comment.setDataValue('_taggedUserIds', new Set(comment.content.match(/@(\d+)/g)?.map(tag => tag.slice(1)) || []));
+      comment.setDataValue('_taggedUserIds', taggedUserIds);
     },
 
     async afterCreate(comment, options) {
       const transaction = options.transaction;
 
-      if (comment.getDataValue('_hashtags')?.length > 0) {
+      const hashtags = comment.getDataValue('_hashtags') || [];
+      if (hashtags.length > 0) {
         const allHashtags = await Promise.all(
-          comment.getDataValue('_hashtags').map(tag =>
+          hashtags.map(tag =>
             HashtagModel.findOrCreate({ where: { name: tag }, transaction })
           )
         );
+        await comment.setHashtags(
+          allHashtags.map(([hashtag]) => hashtag),
+          { transaction }
+        );
+      }
+      const taggedUserIds = comment.getDataValue('_taggedUserIds') || [];
+      if (taggedUserIds.length > 0) {
+        await comment.setUsers(taggedUserIds, { transaction });
+      }
+    },
 
+    async beforeUpdate(comment, options) {
+      const transaction = options.transaction;
+      const hashtags = comment.getDataValue('_hashtags') || [];
+      if (hashtags.length > 0) {
+        const allHashtags = await Promise.all(
+          hashtags.map(tag =>
+            HashtagModel.findOrCreate({ where: { name: tag }, transaction })
+          )
+        );
+        await CommentHashtagModel.destroy({ where: { commentId: comment.id }, transaction });
         await CommentHashtagModel.bulkCreate(
           allHashtags.map(([hashtag]) => ({
             commentId: comment.id,
@@ -67,26 +92,68 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
           { transaction }
         );
       }
+      const tags = comment.getDataValue('_taggedUserIds') || [];
+      if (tags.length > 0) {
+        await CommentTagModel.destroy({ where: { commentId: comment.id }, transaction });
+        await CommentTagModel.bulkCreate(
+          tags.map(userId => ({
+            commentId: comment.id,
+            userId: userId,
+          })),
+          { transaction }
+        );
+      }
+    },
 
-      if (comment.getDataValue('_taggedUserIds')?.size > 0) {
-        const users = await UserModel.findAll({
-          where: { id: Array.from(comment.getDataValue('_taggedUserIds')) },
-          attributes: ['id'],
-          transaction,
-        });
+    async afterUpdate(comment, options) {
+      const transaction = options.transaction;
 
-        if (users.length > 0) {
-          await CommentTagModel.bulkCreate(
-            users.map(user => ({
-              commentId: comment.id,
-              userId: user.id
-            })),
-            { transaction }
-          );
-        }
+      const updatedComment = await CommentModel.findByPk(comment.id, { transaction });
+      if (!updatedComment) {
+        throw new Error("Bình luận không tồn tại.");
+      }
+
+      const hashtags = comment.getDataValue('_hashtags') || [];
+      if (hashtags.length > 0) {
+        const allHashtags = await Promise.all(
+          hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag }, transaction }))
+        );
+        await updatedComment.setHashtags(
+          allHashtags.map(([hashtag]) => hashtag),
+          { transaction }
+        );
+      }
+
+      const taggedUserIds = comment.getDataValue('_taggedUserIds') || [];
+      if (taggedUserIds.length > 0) {
+        await updatedComment.setUsers(taggedUserIds, { transaction });
       }
     },
   };
+
+  static async validation(content: string, parentId?: number, transaction?: Transaction) {
+    if (!content?.trim()) {
+      throw new ValidationError('Nội dung bình luận không được để trống.');
+    }
+    if (parentId) {
+      const parentComment = await CommentModel.findByPk(parentId, { transaction });
+      if (!parentComment) {
+        throw new ValidationError('Bình luận cha không hợp lệ.');
+      }
+    }
+
+    const hashtags = content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
+    const taggedUserIds = content.match(/@(\d+)/g)?.map(tag => parseInt(tag.slice(1))) || [];
+
+    if (hashtags.length > 0) {
+      const banned = await BannedHashtagModel.findAll({ where: { hashtag: hashtags }, transaction });
+      if (banned.length > 0) {
+        throw new ValidationError(`Bình luận chứa hashtag bị cấm: ${banned.map(tag => `#${tag.hashtag}`).join(", ")}`);
+      }
+    }
+    return { hashtags, taggedUserIds };
+  }
+
 
   public static associate() {
     this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post', onDelete: 'CASCADE' });

@@ -14,6 +14,7 @@ import Users from './Users'
 import Comments from './Comments'
 import Reactions from './Reactions';
 import BannedHashtags from './BannedHashtags';
+import BannedWords from './BannedWords';
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
@@ -27,7 +28,9 @@ router.use('/passwords', passport.authenticate('jwt', { session: false }), Passw
 router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 router.use('/comments', Comments);
 router.use('/reactions', Reactions);
+
 router.use('/bannedhashtags', BannedHashtags);
+router.use('/bannedwords', BannedWords);
 
 
 export default router;

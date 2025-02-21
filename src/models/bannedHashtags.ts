@@ -1,4 +1,4 @@
-import BannedHashtagEntity from "@entities/banned_hashtags";
+import BannedHashtagEntity from "@entities/bannedHashtags";
 import BannerHashtagInterface from "@interfaces/bannedHashtags";
 import { Model, Sequelize, ModelScopeOptions, ValidationError } from 'sequelize';
 import { ModelHooks } from "sequelize/types/lib/hooks";
