@@ -104,8 +104,6 @@ class CommentController {
         ],
       });
 
-      await CommentTagModel.destroy({ where: { commentId } });
-      await CommentHashtagModel.destroy({ where: { commentId } });
       await comment.destroy();
 
       return sendSuccess(res, {}, 'Xóa bình luận thành công');

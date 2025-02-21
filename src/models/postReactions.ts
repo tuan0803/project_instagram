@@ -1,6 +1,6 @@
 import { Model, Sequelize, ModelScopeOptions, ValidationError } from 'sequelize';
-import ReactionEntity from '@entities/reactions';
-import ReactionInterface from '@interfaces/reactions';
+import ReactionEntity from '@entities/postReactions';
+import ReactionInterface from '@interfaces/postReactions';
 import PostModel from './posts';
 import UserModel from './users';
 
@@ -12,7 +12,7 @@ class ReactionsModel extends Model<ReactionInterface> implements ReactionInterfa
 
   public static initialize(sequelize: Sequelize) {
     this.init(ReactionEntity, {
-      tableName: 'posts_reactions',
+      tableName: 'post_reactions',
       sequelize,
       timestamps: false,
       hooks: this.hooks,

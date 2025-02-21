@@ -53,10 +53,8 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
       comment.setDataValue('_hashtags', hashtags);
       comment.setDataValue('_taggedUserIds', taggedUserIds);
     },
-
     async afterCreate(comment, options) {
       const transaction = options.transaction;
-
       const hashtags = comment.getDataValue('_hashtags') || [];
       if (hashtags.length > 0) {
         const allHashtags = await Promise.all(
@@ -113,23 +111,29 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
       if (!updatedComment) {
         throw new Error("Bình luận không tồn tại.");
       }
-
       const hashtags = comment.getDataValue('_hashtags') || [];
       if (hashtags.length > 0) {
-        const allHashtags = await Promise.all(
-          hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag }, transaction }))
-        );
-        await updatedComment.setHashtags(
-          allHashtags.map(([hashtag]) => hashtag),
-          { transaction }
-        );
-      }
+        const existingHashtags = await HashtagModel.findAll({
+          where: { name: hashtags },
+          transaction,
+        });
 
+        const existingNamesSet = new Set(existingHashtags.map(h => h.name));
+        const newHashtags = hashtags.filter(tag => !existingNamesSet.has(tag));
+        if (newHashtags.length > 0) {
+          const createdHashtags = await HashtagModel.bulkCreate(
+            newHashtags.map(name => ({ name })),
+            { returning: true, transaction }
+          );
+          existingHashtags.push(...createdHashtags);
+        }
+        await updatedComment.setHashtags(existingHashtags, { transaction });
+      }
       const taggedUserIds = comment.getDataValue('_taggedUserIds') || [];
       if (taggedUserIds.length > 0) {
         await updatedComment.setUsers(taggedUserIds, { transaction });
       }
-    },
+    }
   };
 
   static async validation(content: string, postId: number, parentId?: number, transaction?: Transaction) {

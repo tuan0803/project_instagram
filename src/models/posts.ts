@@ -2,7 +2,6 @@ import { Model, ModelScopeOptions, Sequelize } from 'sequelize';
 import PostEntity from '@entities/posts';
 import PostInterface from '@interfaces/posts';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
-import LikeModel from './likes';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;

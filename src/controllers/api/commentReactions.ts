@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
-import LikeModel from '@models/likes';
+import CommentReactionModel from '@models/commentReactions';
 import UserModel from '@models/users';
 
-class LikeController {
+class CommentReactionController {
   public async get(req: Request, res: Response) {
     try {
-      const { postId } = req.params;
-      const likes = await LikeModel.findAndCountAll({
-        where: { postId },
+      const { commentId } = req.params;
+      const likes = await CommentReactionModel.findAndCountAll({
+        where: { commentId },
         include: [{ model: UserModel, as: 'user', attributes: ['id', 'name', 'avatar_url'] }],
       });
 
@@ -21,14 +21,14 @@ class LikeController {
   public async toggleLike(req: Request, res: Response) {
     try {
       const userId = req.currentUser?.userId ?? 1;
-      const { postId } = req.params;
-      const existingLike = await LikeModel.findOne({ where: { postId, userId } });
+      const { commentId } = req.params;
+      const existingLike = await CommentReactionModel.findOne({ where: { commentId, userId } });
       
       if (existingLike) {
         await existingLike.destroy();
         return sendSuccess(res, null, 'Bỏ like thành công');
       } else {
-        await LikeModel.create({ postId, userId });
+        await CommentReactionModel.create({ commentId, userId });
         return sendSuccess(res, null, 'Like thành công');
       }
     } catch (error: any) {
@@ -37,4 +37,4 @@ class LikeController {
   }
 }
 
-export default new LikeController();
+export default new CommentReactionController();

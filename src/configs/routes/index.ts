@@ -12,9 +12,10 @@ passportJwt(passport);
 import Profiles from './Profiles'
 import Users from './Users'
 import Comments from './Comments'
-import Reactions from './Reactions';
+import PostReactions from './PostReactions';
 import BannedHashtags from './BannedHashtags';
 import BannedWords from './BannedWords';
+import CommentReactions from './CommentReactions';
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
@@ -27,7 +28,8 @@ router.use('/passwords', passport.authenticate('jwt', { session: false }), Passw
 
 router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 router.use('/comments', passport.authenticate('jwt', { session: false }), Comments);
-router.use('/reactions', passport.authenticate('jwt', { session: false }), Reactions);
+router.use('/postreactions', passport.authenticate('jwt', { session: false }), PostReactions);
+router.use('/commentreactions', passport.authenticate('jwt', { session: false }), CommentReactions);
 
 router.use('/bannedhashtags', passport.authenticate('jwt', { session: false }), BannedHashtags);
 router.use('/bannedwords', passport.authenticate('jwt', { session: false }), BannedWords);
