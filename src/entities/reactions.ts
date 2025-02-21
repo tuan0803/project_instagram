@@ -1,7 +1,7 @@
 import { DateTimeUtil } from '@libs/datetime';
 import { DataTypes } from 'sequelize';
 
-const LikeEntity = {
+const ReactionEntity = {
     id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
@@ -30,4 +30,4 @@ const LikeEntity = {
     },
 };
 
-export default LikeEntity;
+export default ReactionEntity;

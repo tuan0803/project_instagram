@@ -1,17 +1,17 @@
 import { Model, Sequelize, ModelScopeOptions, ValidationError } from 'sequelize';
-import LikeEntity from '@entities/reactions';
-import LikeInterface from '@interfaces/reactions';
+import ReactionEntity from '@entities/reactions';
+import ReactionInterface from '@interfaces/reactions';
 import PostModel from './posts';
 import UserModel from './users';
 
-class LikeModel extends Model<LikeInterface> implements LikeInterface {
+class ReactionsModel extends Model<ReactionInterface> implements ReactionInterface {
   public id: number;
   public postId: number;
   public userId: number;
   public createdAt: Date;
 
   public static initialize(sequelize: Sequelize) {
-    this.init(LikeEntity, {
+    this.init(ReactionEntity, {
       tableName: 'likes',
       sequelize,
       timestamps: false,
@@ -20,12 +20,12 @@ class LikeModel extends Model<LikeInterface> implements LikeInterface {
   }
 
   static readonly hooks = {
-    async beforeValidate(like, options) {
+    async beforeValidate(like) {
       const post = await PostModel.findByPk(like.postId);
       if (!post) {
         throw new ValidationError('Bài viết không tồn tại.');
       }
-      const existingLike = await LikeModel.findOne({
+      const existingLike = await ReactionsModel.findOne({
         where: { postId: like.postId, userId: like.userId },
       });
       if (existingLike) {
@@ -52,4 +52,4 @@ class LikeModel extends Model<LikeInterface> implements LikeInterface {
   }
 }
 
-export default LikeModel;
+export default ReactionsModel;

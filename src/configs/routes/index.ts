@@ -26,11 +26,11 @@ router.use('/followers', passport.authenticate('jwt', { session: false }), Follo
 router.use('/passwords', passport.authenticate('jwt', { session: false }), Passwords)
 
 router.use('/users', passport.authenticate('jwt', { session: false }), Users);
-router.use('/comments', Comments);
-router.use('/reactions', Reactions);
+router.use('/comments', passport.authenticate('jwt', { session: false }), Comments);
+router.use('/reactions', passport.authenticate('jwt', { session: false }), Reactions);
 
-router.use('/bannedhashtags', BannedHashtags);
-router.use('/bannedwords', BannedWords);
+router.use('/bannedhashtags', passport.authenticate('jwt', { session: false }), BannedHashtags);
+router.use('/bannedwords', passport.authenticate('jwt', { session: false }), BannedWords);
 
 
 export default router;
