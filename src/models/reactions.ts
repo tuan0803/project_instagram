@@ -12,7 +12,7 @@ class ReactionsModel extends Model<ReactionInterface> implements ReactionInterfa
 
   public static initialize(sequelize: Sequelize) {
     this.init(ReactionEntity, {
-      tableName: 'likes',
+      tableName: 'posts_reactions',
       sequelize,
       timestamps: false,
       hooks: this.hooks,
