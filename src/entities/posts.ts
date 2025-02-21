@@ -1,4 +1,3 @@
-import { DateTimeUtil } from '@libs/datetime';
 import { DataTypes } from 'sequelize';
 
 const PostEntity = {
@@ -10,8 +9,12 @@ const PostEntity = {
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     field: 'user_id',
+    references: {
+      model: "users",
+      key: "id"
+    }
   },
   text: {
     type: DataTypes.STRING(255),
@@ -20,31 +23,11 @@ const PostEntity = {
   },
   createdAt: {
     type: DataTypes.DATE,
-    allowNull: true,
     field: 'created_at',
-    get (): number {
-      return this.getDataValue('created_at') ? DateTimeUtil.dateToMs(this.getDataValue('created_at')) : null;
-    },
   },
   updatedAt: {
     type: DataTypes.DATE,
-    allowNull: true,
     field: 'updated_at',
-    get (): number {
-      return this.getDataValue('updated_at')
-        ? DateTimeUtil.dateToMs(this.getDataValue('updated_at'))
-        : null;
-    },
-  },
-  commentCount: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    field: 'comment_count',
-  },
-  reactionCount: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    field: 'reaction_count',
   },
 };
 export default PostEntity;
