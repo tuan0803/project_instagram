@@ -19,6 +19,17 @@ class BannedHashtagModel extends Model<BannerHashtagInterface> implements Banner
 
     static readonly hooks: Partial<ModelHooks<BannedHashtagModel>> = {
         async beforeValidate(bannedHashtag, _options) {
+            if (!bannedHashtag.hashtag || bannedHashtag.hashtag.trim() === "") {
+                throw new ValidationError("Hashtag không được để trống.");
+            }
+
+            const existingHashtag = await BannedHashtagModel.findOne({
+                where: { hashtag: bannedHashtag.hashtag },
+                transaction: _options.transaction,
+            });
+            if (existingHashtag) {
+                throw new ValidationError("Hashtag đã bị cấm trước đó.");
+            }
         },
     };
 
