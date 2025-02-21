@@ -132,7 +132,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     },
   };
 
-  static async validation(content: string, parentId?: number, transaction?: Transaction) {
+  static async validation(content: string, postId: number, parentId?: number, transaction?: Transaction) {
     if (!content?.trim()) {
       throw new ValidationError('Nội dung bình luận không được để trống.');
     }
@@ -160,6 +160,12 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
         throw new ValidationError(`Bình luận chứa từ ngữ bị cấm: "${words}"`);
       }
     }
+
+    const post = await PostModel.findByPk(postId, { transaction });
+    if (!postId || isNaN(postId)) {
+      throw new ValidationError(`ID bài viết ${postId} không hợp lệ.`);
+    }
+
     return { hashtags, taggedUserIds };
   }
 
