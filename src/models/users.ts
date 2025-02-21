@@ -8,6 +8,9 @@ import Settings from '@configs/settings';
 import MailActive from '@services/mailer';
 import fs from 'fs';
 import PostTagUserModel from './postTagUsers';
+import PostModel from './posts';
+import MediaModel from './medias';
+import MediaTagsModel from './mediaTags';
 
 class UserModel extends Model<UserInterface> implements UserInterface {
     public id: number;
@@ -178,7 +181,8 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     }
 
     public static associate() {
-        this.hasMany(PostTagUserModel, { foreignKey: 'userId', as: 'taggedUsers' });
+        UserModel.belongsToMany(PostModel, { through: PostTagUserModel, as: 'taggedUsers', foreignKey: 'userId', otherKey: 'postId'});
+        UserModel.belongsToMany(MediaModel, { through: MediaTagsModel, as: 'taggedMedias', foreignKey: 'userId', otherKey: 'mediaId'});
     }
 
     public toJSON () {

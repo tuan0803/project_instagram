@@ -3,6 +3,7 @@ import MediasEntity from '@entities/medias';
 import MediaInterface from '@interfaces/medias';
 import PostModel from './posts';
 import MediaTagsModel from './mediaTags';
+import UserModel from './users';
 
 
 class MediaModel extends Model<MediaInterface> implements MediaInterface {
@@ -21,7 +22,7 @@ class MediaModel extends Model<MediaInterface> implements MediaInterface {
 
     public static associate() {
         this.belongsTo(PostModel, { foreignKey: 'postId', as: 'post' });
-        this.hasMany(MediaTagsModel, { foreignKey: 'mediaId', as: 'mediaTags' });
+        MediaModel.belongsToMany(UserModel, { through: MediaTagsModel, as: 'taggedUsers', foreignKey: 'mediaId', otherKey: 'userId'});
     }
       
 }

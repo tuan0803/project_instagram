@@ -1,4 +1,4 @@
-import { Model, Sequelize} from 'sequelize';
+import { Model, ModelScopeOptions, Sequelize} from 'sequelize';
 import PostEntity from '@entities/posts';
 import PostInterface from '@interfaces/posts';
 import UserModel from './users';
@@ -18,42 +18,75 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
   static readonly hooks: Partial<ModelHooks<PostModel>> = {
     async afterValidate(post, options) {
-      const hashtags = post.text.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
-      const taggedUserIds = post.text.match(/@(\d+)/g)?.map(tag => tag.slice(1)) || []; 
-      if (hashtags.length > 0) {
+      if (!post.text) return;
+      const hashtags = post.text.match(/#(\w+)/g);
+      const taggedUserIds = post.text.match(/@(\d+)/g);
+    
+      const hashtagList = hashtags ? hashtags.map(tag => tag.substring(1)) : [];
+      const taggedUsers = taggedUserIds ? taggedUserIds.map(tag => tag.slice(1)) : [];
+      if (hashtagList.length > 0) {
         const allHashtags = await Promise.all(
-          hashtags.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
+          hashtagList.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
         );
-        const hashtagsData = allHashtags.map(([hashtag]) => hashtag);
-        const postHashtags = hashtagsData.map(hashtag => ({
-          hashtagId: hashtag.id 
-        }));
-        await post.set('postHashtags', postHashtags);
+        post.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
       }
-      if (taggedUserIds.length > 0) {
-        const users = await Promise.all(
-          taggedUserIds.map(userId => 
-            UserModel.findOne({ 
-              where: { id: userId }, 
-              attributes: ['id'] 
-            })
-          )
-        );
+      if (taggedUsers.length > 0) {
+        const users = await UserModel.findAll({
+          where: { id: taggedUsers },
+          attributes: ['id']
+        });
         const validUsers = users.filter(user => user !== null);
-      
         if (validUsers.length > 0) {
-          const postTags = validUsers.map(user => ({ 
-            userId: user.id
-          }));
-          await post.set('taggedUsers', postTags);
+          post.setDataValue('users', validUsers);
         }
       }
-    },  
+    },
+    async beforeUpdate(post, options) {
+
+      const hashtags = post.text.match(/#(\w+)/g);
+      const taggedUserIds = post.text.match(/@(\d+)/g);
+    
+      const hashtagList = hashtags ? hashtags.map(tag => tag.substring(1)) : [];
+      const taggedUsers = taggedUserIds.map(tag => tag.slice(1));
+
+      if (hashtagList.length > 0) {
+        const allHashtags = await Promise.all(
+          hashtagList.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
+        );
+        post.setHashtags(allHashtags.map(([hashtag]) => hashtag))
+      }
+
+      if (taggedUsers.length > 0) {
+        const users = await UserModel.findAll({
+          where: { id: taggedUsers },
+          attributes: ['id']
+        });
+
+        if (users.length > 0) {
+          const userIds = users.map(user => user.id);
+          await post.setUsers(userIds);
+        }
+      }        
+    },    
+  };
+
+  static readonly scopes: ModelScopeOptions = {
+    byId (id) {
+      return {
+        where:{ id }
+      }
+    },
+    byUser (userId) {
+      return {
+        where: { userId }
+      }
+    }
   };
 
   public static initialize (sequelize: Sequelize) {
     this.init(PostEntity, {
       hooks: PostModel.hooks,
+      scopes: PostModel.scopes,
       tableName: 'posts',
       timestamps: true,
       sequelize,
@@ -61,10 +94,10 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   }
 
   public static associate() {
-    this.hasMany(PostHashtagModel, { foreignKey: 'postId', as: 'postHashtags' });
-    this.hasMany(MediaModel, { foreignKey: 'postId', as: 'media' });
-    this.hasMany(PostTagUserModel, { foreignKey: 'postId', as: 'taggedUsers' });
-    this.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });
+    PostModel.belongsTo(UserModel, { foreignKey: 'userId', as: 'author' });
+    PostModel.belongsToMany(HashtagModel, { through: PostHashtagModel, foreignKey: 'postId', as: 'hashtags' });
+    PostModel.hasMany(MediaModel, { foreignKey: 'postId', as: 'media', onDelete: 'CASCADE', onUpdate: 'CASCADE', hooks: true });
+    PostModel.belongsToMany(UserModel, { through: PostTagUserModel, foreignKey: 'postId', otherKey: 'userId', as: 'users' });
   }
 }
 
