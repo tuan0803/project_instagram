@@ -7,6 +7,7 @@ import HashtagModel from './hashtags';
 import CommentHashtagModel from './commentHastags';
 import UserModel from './users';
 import BannedHashtagModel from './bannedHashtags';
+import BannedWordModel from './bannedWords';
 
 class CommentModel extends Model<CommentInterface> implements CommentInterface {
   public id: number;
@@ -31,17 +32,17 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
       const commentList = Array.isArray(comments) ? comments : [comments];
 
       for (const comment of commentList) {
-        const hashtags = await comment.getHashtags(); 
+        const hashtags = await comment.getHashtags();
         let updatedContent = comment.content;
         for (const hashtag of hashtags) {
-          const regex = new RegExp(`#${hashtag.name}\\b`, "g"); 
+          const regex = new RegExp(`#${hashtag.name}\\b`, "g");
           updatedContent = updatedContent.replace(regex, `#${hashtag.id}`);
         }
 
         comment.setDataValue('content', updatedContent);
       }
     },
-    
+
     async beforeValidate(comment, options) {
       const { hashtags, taggedUserIds } = await CommentModel.validation(
         comment.content,
@@ -141,14 +142,22 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
         throw new ValidationError('Bình luận cha không hợp lệ.');
       }
     }
-
+    //hashtag
     const hashtags = content.match(/#(\w+)/g)?.map(tag => tag.substring(1)) || [];
     const taggedUserIds = content.match(/@(\d+)/g)?.map(tag => parseInt(tag.slice(1))) || [];
-
     if (hashtags.length > 0) {
       const banned = await BannedHashtagModel.findAll({ where: { hashtag: hashtags }, transaction });
       if (banned.length > 0) {
         throw new ValidationError(`Bình luận chứa hashtag bị cấm: ${banned.map(tag => `#${tag.hashtag}`).join(", ")}`);
+      }
+    }
+    //words
+    const bannedWords = await BannedWordModel.findAll({ attributes: ['words'], transaction });
+    const bannedList = bannedWords.map(bw => bw.words.toLowerCase());
+    for (const words of bannedList) {
+      const regex = new RegExp(`\\b${words}\\b`, 'i');
+      if (regex.test(content)) {
+        throw new ValidationError(`Bình luận chứa từ ngữ bị cấm: "${words}"`);
       }
     }
     return { hashtags, taggedUserIds };
