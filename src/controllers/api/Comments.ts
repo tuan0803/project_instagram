@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
-import CommentHashtagModel from '@models/commentHastags';
+import CommentHashtagModel from '@models/commentHashtags';
 import CommentTagModel from '@models/commentTags';
 import HashtagModel from '@models/hashtags';
 import UserModel from '@models/users';
@@ -36,46 +36,43 @@ class CommentController {
   }
 
   public async create(req: Request, res: Response) {
+    const transaction = await CommentModel.sequelize.transaction();
     try {
       const userId = req.currentUser?.userId ?? 1;
       const { postId } = req.params;
       const { content, parentId } = req.fields || req.body;
 
-      const newComment = await CommentModel.create({
-        postId,
-        userId,
-        content,
-        parentId: parentId ? Number(parentId) : null,
-      });
-
+      const newComment = await CommentModel.create(
+        { postId, userId, content, parentId: parentId ? Number(parentId) : null },
+        { transaction }
+      );
+      await transaction.commit();
       const comment = await CommentModel.findByPk(newComment.id, {
         include: [
           { model: UserModel, attributes: ['id', 'name', 'avatar_url'], as: 'users' },
           { model: CommentTagModel, attributes: ['id', 'comment_id', 'user_id'], as: 'commentTags' },
-          { model: HashtagModel, attributes: ['id'], as: 'hashtags' },
+          { model: HashtagModel, attributes: ['id', 'name'], as: 'hashtags' },
           { model: CommentHashtagModel, attributes: ['id', 'comment_id', 'hashtag_id'], as: 'commentHashtags' },
         ],
       });
-
       return sendSuccess(res, comment, 'Tạo bình luận thành công');
     } catch (error) {
+      await transaction.rollback();
       return sendError(res, 500, 'Lỗi khi tạo bình luận', error.message || error);
     }
   }
 
+
   public async update(req: Request, res: Response) {
     try {
-
+      const transaction = await CommentModel.sequelize.transaction();
       const { id: commentId } = req.params;
       const userId = req.currentUser?.userId ?? 1;
       const { content } = req.fields || req.body;
       const commentInstance = await CommentModel.findOne({ where: { id: commentId, userId } });
-      if (!commentInstance) {
-        return sendError(res, 404, 'Không tìm thấy bình luận hoặc bạn không có quyền cập nhật.');
-      }
 
       commentInstance.content = content;
-      await commentInstance.save();
+      await commentInstance.update({ content },);
 
       const updatedComment = await CommentModel.findByPk(Number(commentId), {
         include: [

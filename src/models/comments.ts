@@ -4,7 +4,7 @@ import CommentInterface from '@interfaces/comments';
 import PostModel from './posts';
 import CommentTagModel from './commentTags';
 import HashtagModel from './hashtags';
-import CommentHashtagModel from './commentHastags';
+import CommentHashtagModel from './commentHashtags';
 import UserModel from './users';
 import BannedHashtagModel from './bannedHashtags';
 import BannedWordModel from './bannedWords';
@@ -38,21 +38,22 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
           const regex = new RegExp(`#${hashtag.name}\\b`, "g");
           updatedContent = updatedContent.replace(regex, `#${hashtag.id}`);
         }
-
-        comment.setDataValue('content', updatedContent);
+        await comment.setDataValue('content', updatedContent);
       }
     },
 
     async beforeValidate(comment, options) {
       const { hashtags, taggedUserIds } = await CommentModel.validation(
         comment.content,
+        comment.postId,
         comment.parentId,
         options.transaction
       );
 
-      comment.setDataValue('_hashtags', hashtags);
-      comment.setDataValue('_taggedUserIds', taggedUserIds);
+      await comment.setDataValue('_hashtags', hashtags);
+      await comment.setDataValue('_taggedUserIds', taggedUserIds);
     },
+
     async afterCreate(comment, options) {
       const transaction = options.transaction;
       const hashtags = comment.getDataValue('_hashtags') || [];
@@ -75,64 +76,52 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
 
     async beforeUpdate(comment, options) {
       const transaction = options.transaction;
-      const hashtags = comment.getDataValue('_hashtags') || [];
-      if (hashtags.length > 0) {
-        const allHashtags = await Promise.all(
-          hashtags.map(tag =>
-            HashtagModel.findOrCreate({ where: { name: tag }, transaction })
-          )
-        );
-        await CommentHashtagModel.destroy({ where: { commentId: comment.id }, transaction });
-        await CommentHashtagModel.bulkCreate(
-          allHashtags.map(([hashtag]) => ({
-            commentId: comment.id,
-            hashtagId: hashtag.id,
-          })),
-          { transaction }
+      if (comment.changed("content")) {
+        const { hashtags, taggedUserIds } = await CommentModel.validation(
+          comment.content,
+          comment.postId,
+          comment.parentId,
+          transaction
         );
       }
-      const tags = comment.getDataValue('_taggedUserIds') || [];
-      if (tags.length > 0) {
-        await CommentTagModel.destroy({ where: { commentId: comment.id }, transaction });
-        await CommentTagModel.bulkCreate(
-          tags.map(userId => ({
-            commentId: comment.id,
-            userId: userId,
-          })),
-          { transaction }
-        );
+      if (comment.changed("content")) {
+        await CommentHashtagModel.destroy({
+          where: { commentId: comment.id },
+          transaction,
+        });
+        await CommentTagModel.destroy({
+          where: { commentId: comment.id },
+          transaction,
+        });
+        const hashtags = comment.getDataValue('_hashtags') || [];
+        if (hashtags.length > 0) {
+          const allHashtags = await Promise.all(
+            hashtags.map(tag =>
+              HashtagModel.findOrCreate({ where: { name: tag }, transaction })
+            )
+          );
+          await comment.setHashtags(
+            allHashtags.map(([hashtag]) => hashtag),
+            { transaction }
+          );
+        }
+        const taggedUserIds = comment.getDataValue('_taggedUserIds') || [];
+        if (taggedUserIds.length > 0) {
+          await comment.setUsers(taggedUserIds, { transaction });
+        }
       }
     },
 
-    async afterUpdate(comment, options) {
+    async afterDestroy(comment, options) {
       const transaction = options.transaction;
-
-      const updatedComment = await CommentModel.findByPk(comment.id, { transaction });
-      if (!updatedComment) {
-        throw new Error("Bình luận không tồn tại.");
-      }
-      const hashtags = comment.getDataValue('_hashtags') || [];
-      if (hashtags.length > 0) {
-        const existingHashtags = await HashtagModel.findAll({
-          where: { name: hashtags },
-          transaction,
-        });
-
-        const existingNamesSet = new Set(existingHashtags.map(h => h.name));
-        const newHashtags = hashtags.filter(tag => !existingNamesSet.has(tag));
-        if (newHashtags.length > 0) {
-          const createdHashtags = await HashtagModel.bulkCreate(
-            newHashtags.map(name => ({ name })),
-            { returning: true, transaction }
-          );
-          existingHashtags.push(...createdHashtags);
-        }
-        await updatedComment.setHashtags(existingHashtags, { transaction });
-      }
-      const taggedUserIds = comment.getDataValue('_taggedUserIds') || [];
-      if (taggedUserIds.length > 0) {
-        await updatedComment.setUsers(taggedUserIds, { transaction });
-      }
+      await CommentHashtagModel.destroy({
+        where: { commentId: comment.id },
+        transaction
+      });
+      await CommentTagModel.destroy({
+        where: { commentId: comment.id },
+        transaction
+      });
     }
   };
 

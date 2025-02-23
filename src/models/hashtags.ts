@@ -1,6 +1,6 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
 import HashtagEntity from '@entities/hashtags';
-import CommentHashtagModel from './commentHastags';
+import CommentHashtagModel from './commentHashtags';
 import CommentModel from './comments';
 class HashtagModel extends Model {
     public id: number;
