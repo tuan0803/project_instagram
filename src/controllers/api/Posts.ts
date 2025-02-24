@@ -6,12 +6,11 @@ import { InternalError } from '@libs/errors';
 import MediaModel from '@models/medias';
 import MediaTagsModel from '@models/mediaTags';
 import UserModel from '@models/users';
-import PostTagUserModel from '@models/postTagUsers';
 import multer from 'multer';
 import FileUploaderService from '@services/fileUploader';
-import PostHashtagModel from '@models/postHashtags';
 import sequelize from '@initializers/sequelize';
 const upload = multer({ storage: multer.memoryStorage() });
+
 
 
 class PostController {
@@ -21,117 +20,38 @@ class PostController {
       const pageNumber = Number(page);
       const pageSize = Number(limit);
 
-      const posts = await PostModel.scope(userId ? { method: ['byUser', userId ]} : {}).findAndCountAll({
-        include: [
-          { 
-            model: PostHashtagModel,
-            as: 'postHashtags',
-            attributes: ['id'],
-            include: [
-              { 
-                model: HashtagModel, 
-                as: 'hashtag' 
-              }
-            ],
-          },
-          {
-            model: MediaModel,
-            as: 'media',
-            include: [
-              { 
-                model: MediaTagsModel, 
-                as: 'mediaTags', 
-                attributes: ['id', 'x', 'y'], 
-                include: [
-                  { 
-                    model: UserModel, 
-                    as: 'user', 
-                    attributes: ['id', 'name'] 
-                  }
-                ] 
-              }  
-            ],
-          },
-          {
-            model: PostTagUserModel,
-            as: 'taggedUsers',
-            include: [
-              { 
-                model: UserModel, 
-                as: 'user', 
-                attributes: ['id', 'name'] 
-              }
-            ],
-          },
-        ],
+      const scopes = [
+        'withComponents',
+        userId ? { method: ['byUser', userId] } : {}, 
+      ];
+      const total = await PostModel.count({
+        distinct: true,
+        col: 'PostModel.id',
+      });
+      const posts = await PostModel.scope(scopes).findAll({
         order: [['createdAt', 'DESC']],
         offset: (pageNumber - 1) * pageSize,
-        limit: pageSize,
-        distinct: true,
+        limit: pageSize
       });
 
       sendSuccess(res, { 
-        posts: posts.rows, 
-        pagination: { 
-          total: posts.count, 
-          page, 
-          limit, 
-          totalPages: Math.ceil(posts.count / Number(limit)) 
-        }
+        posts, 
+        pagination: {
+          total,
+          page: pageNumber,
+          limit: pageSize,
+          totalPages: Math.ceil(total / pageSize),
+        },
       });
-      
-    } catch (error) { 
+    } catch (error) {
       sendError(res, 500, InternalError, error.message);
     }
   }
-
+ 
   public async show(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const post = await PostModel.findByPk(id, {
-        include: [
-          { 
-            model: PostHashtagModel,
-            as: 'postHashtags',
-            attributes: ['id'],
-            include: [
-              { 
-                model: HashtagModel, 
-                as: 'hashtag' 
-              }
-            ],
-          },
-          {
-            model: MediaModel,
-            as: 'media',
-            include: [
-              { 
-                model: MediaTagsModel, 
-                as: 'mediaTags', 
-                attributes: ['id', 'x', 'y'], 
-                include: [
-                  { 
-                    model: UserModel, 
-                    as: 'user', 
-                    attributes: ['id', 'name'] 
-                  }
-                ] 
-              }  
-            ],
-          },
-          {
-            model: PostTagUserModel,
-            as: 'taggedUsers',
-            include: [
-              { 
-                model: UserModel, 
-                as: 'user', 
-                attributes: ['id', 'name'] 
-              }
-            ],
-          },
-        ],
-      });
+      const post = await PostModel.scope(['withComponents']).findByPk(id);
       sendSuccess(res, { post });
     } catch (error) {
       sendError(res, 500, InternalError, error.message);
@@ -216,26 +136,7 @@ class PostController {
         const parsedMediaTags = typeof req.body.mediaTags === 'string' 
             ? JSON.parse(req.body.mediaTags) 
             : req.body.mediaTags || [];
-        const post = await PostModel.findByPk(id, {
-          include: [
-            { 
-               model: HashtagModel, 
-               as: 'hashtags', 
-               through: { attributes: [] }
-            },
-            {
-              model: MediaModel,
-              as: 'media',
-              include: [{ model: MediaTagsModel, as: 'mediaTags' }],
-            },
-            {
-              model: UserModel,
-              as: 'users',
-              through: { attributes: [] },
-            }
-          ],
-          transaction
-        });
+        const post = await PostModel.scope('withComponents').findByPk(id, { transaction });
   
         if (!post) {
           await transaction.rollback();
@@ -259,72 +160,41 @@ class PostController {
                 type: fileType.startsWith('image/') ? 'image' : 'video',
                 mediaTags: matchedTags.flatMap(tag =>
                   tag.mediaTags?.filter(t => t.userId && t.x !== undefined && t.y !== undefined) || []
-                ) || [], 
+                ) || [],
               };
             } catch (error) {
               console.error("File upload error:", error);
-              return null; 
+              return null;
             }
           })
         );
         const validMediaItems = mediaItems.filter(item => item !== null);
         await post.update({ text }, { transaction });
-        const existingMedia = post.media.map(m => m.url);
-        const mediaToAdd = validMediaItems.filter(m => !existingMedia.includes(m.url));
-        const mediaToRemove = post.media.filter(m => !validMediaItems.some(n => n.url === m.url));
-        if (mediaToRemove.length > 0) {
-          for (const media of mediaToRemove) {
-              await media.setMediaTags([]); 
-              await media.destroy({ transaction }); 
-          }
-        }
-        if (mediaToAdd.length > 0) {
-          const newMedia = await MediaModel.bulkCreate(
-            mediaToAdd.map(m => ({
-              url: m.url,
-              type: m.type,
-              postId: post.id
-            })), 
-            { transaction }
-          );
-      
-          for (const media of newMedia) {
-            const matchingTags = parsedMediaTags.find(tag => tag.filename === media.url);
-            if (matchingTags && matchingTags.mediaTags.length > 0) {
-              const newTags = matchingTags.mediaTags.map(tag => ({
-                mediaId: media.id,
-                userId: tag.userId,
-                x: tag.x,
-                y: tag.y
-              }));
-              await MediaTagsModel.bulkCreate(newTags, { transaction });
-            }
-          }
-        }
-        await post.setMedia(await MediaModel.findAll({ where: { postId: post.id }, transaction }), { transaction });
-        
-        await transaction.commit();
-  
-        const updatedPost = await PostModel.findByPk(id, {
-          include: [
-            { 
-               model: HashtagModel, 
-               as: 'hashtags', 
-               through: { attributes: [] }
-            },
-            {
-              model: MediaModel,
-              as: 'media',
-              include: [{ model: MediaTagsModel, as: 'mediaTags' }],
-            },
-            {
-              model: UserModel,
-              as: 'users',
-              attributes: ['id', 'name'],
-              through: { attributes: [] },
-            }
-          ],
+        await MediaModel.destroy({
+          where: { postId: post.id },
+          transaction
         });
+        const newMediaArray = await MediaModel.bulkCreate(
+          validMediaItems.map(m => ({
+            url: m.url,
+            type: m.type,
+            postId: post.id,
+          })),
+          { returning: true, transaction }
+        );
+        const allTags = newMediaArray.flatMap((media, index) => 
+          validMediaItems[index].mediaTags.map(tag => ({
+            mediaId: media.id,
+            userId: tag.userId,
+            x: tag.x,
+            y: tag.y,
+          }))
+        );
+        if (allTags.length > 0) {
+          await MediaTagsModel.bulkCreate(allTags, { transaction });
+        }
+        await transaction.commit();
+        const updatedPost = await PostModel.scope('withComponents').findByPk(id);
   
         sendSuccess(res, { post: updatedPost });
       } catch (error) {
@@ -334,6 +204,20 @@ class PostController {
     });
   };
   
+  public async delete( req: Request, res: Response ) {
+    const transaction = await sequelize.transaction();
+    try {
+      const { id } = req.currentUser;
+      const { postId } = req.params;
+      const post = await PostModel.scope(['withComponents', { method: ['byId', postId]}, {method: ['byUser', id]}]).findOne();  
+
+      await post.destroy({ transaction })
+      await transaction.commit();
+      sendSuccess(res, {}, 'Post deleted successfully');
+    } catch (error) {
+      sendError(res, 500, 'Internal Error', error.message);
+    }
+  }
 }
 
 export default new PostController();

@@ -7,6 +7,7 @@ import HashtagModel from './hashtags';
 import { ModelHooks } from 'sequelize/types/lib/hooks';
 import PostTagUserModel from './postTagUsers';
 import MediaModel from './medias';
+import MediaTagsModel from './mediaTags';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
@@ -28,45 +29,40 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         const allHashtags = await Promise.all(
           hashtagList.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
         );
-        post.setDataValue('hashtags', allHashtags.map(([hashtag]) => hashtag));
+        const hashtagsWithId = allHashtags.map(([hashtag]) => hashtag);
+        post.setDataValue('hashtags', hashtagsWithId);
+        let updatedText = post.text;
+        hashtagsWithId.forEach(({ name, id }) => {
+          const regex = new RegExp(`#${name}\\b`, 'gi');
+          updatedText = updatedText.replace(regex, `#{{${id}}}`);
+        });
+        post.text = updatedText;
+      } else {
+        post.setDataValue('hashtags', []);
       }
       if (taggedUsers.length > 0) {
         const users = await UserModel.findAll({
           where: { id: taggedUsers },
           attributes: ['id']
         });
-        const validUsers = users.filter(user => user !== null);
-        if (validUsers.length > 0) {
-          post.setDataValue('users', validUsers);
-        }
+        post.setDataValue('users', users);
+        let updatedText = post.text;
+        users.forEach(({ id }) => {
+          const regex = new RegExp(`@${id}\\b`, 'gi');
+          updatedText = updatedText.replace(regex, `@{{${id}}}`);
+        });
+        post.text = updatedText;
+      } else {
+        post.setDataValue('users', []);
       }
     },
     async beforeUpdate(post, options) {
-
-      const hashtags = post.text.match(/#(\w+)/g);
-      const taggedUserIds = post.text.match(/@(\d+)/g);
-    
-      const hashtagList = hashtags ? hashtags.map(tag => tag.substring(1)) : [];
-      const taggedUsers = taggedUserIds.map(tag => tag.slice(1));
-
-      if (hashtagList.length > 0) {
-        const allHashtags = await Promise.all(
-          hashtagList.map(tag => HashtagModel.findOrCreate({ where: { name: tag } }))
-        );
-        post.setHashtags(allHashtags.map(([hashtag]) => hashtag))
+      if (post.changed('text')) {
+        const hashtags = post.getDataValue('hashtags') || [];
+        await post.setHashtags(hashtags);
+        const users = post.getDataValue('users') || [];
+        await post.setUsers(users);
       }
-
-      if (taggedUsers.length > 0) {
-        const users = await UserModel.findAll({
-          where: { id: taggedUsers },
-          attributes: ['id']
-        });
-
-        if (users.length > 0) {
-          const userIds = users.map(user => user.id);
-          await post.setUsers(userIds);
-        }
-      }        
     },    
   };
 
@@ -80,7 +76,49 @@ class PostModel extends Model<PostInterface> implements PostInterface {
       return {
         where: { userId }
       }
-    }
+    },
+    withComponents() { 
+      return {
+        include: [
+          {
+            model: UserModel,
+            as: 'author', 
+            attributes: [['id', 'authorId'], 'name'],
+          },
+          { 
+            model: UserModel, 
+            as: 'users', 
+            attributes: [['id', 'taggedUserId'], 'name'],
+            through: { attributes: [] },
+          },
+          { 
+            model: HashtagModel,
+            as: 'hashtags', 
+            attributes: [['id', 'hashtagId'], 'name'],
+            through: { attributes: [] },
+          },
+          { 
+            model: MediaModel, 
+            as: 'media', 
+            attributes: [['id', 'mediaId'], 'url', 'type'],
+            include: [
+              { 
+                model: MediaTagsModel, 
+                as: 'mediaTags', 
+                attributes: [['id', 'mediaTagId'], 'x', 'y'],
+                include: [
+                  { 
+                    model: UserModel,
+                    as: 'user', 
+                    attributes: [['id', 'userId'], 'name']
+                  }
+                ]
+              }
+            ]
+          },
+        ],
+      };
+    },
   };
 
   public static initialize (sequelize: Sequelize) {
