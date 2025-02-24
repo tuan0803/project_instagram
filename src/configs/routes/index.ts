@@ -13,6 +13,7 @@ import Profiles from './Profiles'
 import Users from './Users'
 import Posts from './Posts';
 import searchRoutes from './searchRoutes';
+import SearchHistory from './SearchHistory';
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
@@ -24,4 +25,5 @@ router.use('/me', passport.authenticate('jwt', { session: false }), Profiles);
 router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 router.use('/posts', passport.authenticate('jwt', { session: false }), Posts);
 router.use('/search', passport.authenticate('jwt', { session: false }), searchRoutes);
+router.use('/history', passport.authenticate('jwt', { session: false }), SearchHistory);
 export default router;

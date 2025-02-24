@@ -2,12 +2,14 @@ import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import UserModel from '@models/users';
 import { Op } from 'sequelize';
-import SearchHistoryModel from '@models/search';
 import HashtagModel from '@models/hashtags';
+import SearchHistoryController from '@controllers/api/SearchHistoryController';
 class SearchController {
   public async searchUsers(req: Request, res: Response) {
     try {
       const { query = '', limit = 10, page = 1, type = 'all' } = req.query;
+      const queryStr = typeof query === 'string' ? query : '';
+      const typeStr = typeof type === 'string' ? type : 'all';
       const pageNumber = Number(page);
       const limitNumber = Number(limit);
       const offset = (pageNumber - 1) * limitNumber;
@@ -48,12 +50,18 @@ class SearchController {
         hashtags = hashtagResult.rows;
         totalHashtags = hashtagResult.count;
       }
-      await SearchHistoryModel.create({
-        type: 'user',
-        userId: req.currentUser.id,
-        query : query,
+      let results = [...users, ...hashtags];
+      results.sort((a, b) => {
+        if (a.type === 'user' && b.type === 'hashtag') return -1;
+        if (a.type === 'hashtag' && b.type === 'user') return 1;
+        const aExact = a.name.toLowerCase() === queryStr.toLowerCase();
+        const bExact = b.name.toLowerCase() === queryStr.toLowerCase();
+        if (aExact && !bExact) return -1;
+        if (!aExact && bExact) return 1;
+  
+        return 0; 
       });
-      
+      await SearchHistoryController.saveSearchHistory(req.currentUser.id, queryStr, typeStr);
       const totalPagesUser = Math.ceil(totalUsers / limitNumber);
       const totalPagesHashtags = Math.ceil(totalHashtags / limitNumber);
       return sendSuccess(res, {
@@ -78,22 +86,7 @@ class SearchController {
       sendError(res, 500, { errorCode: 135 }, error);
     }
   }
-  public async getSearchHistory(req: Request, res: Response) {
-    try {
-        const userId = req.currentUser.id;
-        const history = await SearchHistoryModel.findAll({
-            where : {user_id: userId},
-            order: [['created_at', 'DESC']],
-            limit: 10,
-        
-        });
-        
-        return sendSuccess(res, { history });
-    
-    } catch (error) {
-        sendError(res, 500, { errorCode: 136 }, error);
-    }
-  }
+  
 }
 
 export default new SearchController();
