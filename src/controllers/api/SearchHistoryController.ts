@@ -11,7 +11,6 @@ class SearchHistoryController {
         type: type,
       });
     } catch (error) {
-      console.error("Error saving search history:", error);
     }
   }
 
