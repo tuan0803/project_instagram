@@ -6,11 +6,12 @@ class SearchHistoryController {
   public async saveSearchHistory(userId: number, query: string, type: string) {
     try {
       await SearchHistoryModel.create({
-        user_id: userId,
+        userId: userId,
         query: query,
         type: type,
       });
     } catch (error) {
+      console.error("Error saving search history:", error);
     }
   }
 

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
-import UserModel from '@models/users';
-import { Op } from 'sequelize';
-import HashtagModel from '@models/hashtags';
 import SearchHistoryController from '@controllers/api/SearchHistoryController';
+import { QueryTypes } from 'sequelize';
+import sequelize from '@initializers/sequelize';
+
 class SearchController {
   public async searchUsers(req: Request, res: Response) {
     try {
@@ -17,76 +17,43 @@ class SearchController {
       if (!query) {
         return sendError(res, 400, 'Query empty');
       }
-      let users: any[] = [];
-      let totalUsers = 0;
-      if( type === 'all' || type === 'user') {
-      const userResult = await UserModel.findAndCountAll({
-        where: {
-          name: {
-            [Op.like]: `%${query}%`, 
-            
-          },
-        },
-        attributes: ['id', 'name', 'avatar_url'], 
-        limit: limitNumber,
-        offset: offset,
-      });
-      users = userResult.rows;
-      totalUsers = userResult.count;
+      
+      let whereCondition = `name LIKE :query`;
+      let sqlQuery = '';
+
+      if (type === 'all') {
+        sqlQuery = `
+          (SELECT id, name, avatar_url, 'user' AS type FROM users WHERE ${whereCondition})
+          UNION
+          (SELECT id, name, NULL AS avatar_url, 'hashtag' AS type FROM hashtags WHERE ${whereCondition})
+          ORDER BY CASE WHEN name = :query THEN 1 ELSE 2 END, name ASC
+          LIMIT :limit OFFSET :offset
+        `;
+      } else if (type === 'user') {
+        sqlQuery = `SELECT id, name, avatar_url, 'user' AS type FROM users WHERE ${whereCondition} LIMIT :limit OFFSET :offset`;
+      } else if (type === 'hashtag') {
+        sqlQuery = `SELECT id, name, NULL AS avatar_url, 'hashtag' AS type FROM hashtags WHERE ${whereCondition} LIMIT :limit OFFSET :offset`;
       }
-      let hashtags: any[] = [];
-      let totalHashtags = 0;
-      if( type === 'all' || type === 'hashtag') {
-        const hashtagResult = await HashtagModel.findAndCountAll({
-          where: {
-            name: {
-              [Op.like]: `%${query}%`,
-              },
-            },
-            attributes: ['id', 'name'],
-            limit: limitNumber,
-            offset: offset,
-        });
-        hashtags = hashtagResult.rows;
-        totalHashtags = hashtagResult.count;
-      }
-      let results = [...users, ...hashtags];
-      results.sort((a, b) => {
-        if (a.type === 'user' && b.type === 'hashtag') return -1;
-        if (a.type === 'hashtag' && b.type === 'user') return 1;
-        const aExact = a.name.toLowerCase() === queryStr.toLowerCase();
-        const bExact = b.name.toLowerCase() === queryStr.toLowerCase();
-        if (aExact && !bExact) return -1;
-        if (!aExact && bExact) return 1;
-  
-        return 0; 
+
+      const results = await sequelize.query(sqlQuery, {
+        replacements: { query: `%${queryStr}%`, limit: limitNumber, offset: offset },
+        type: QueryTypes.SELECT,
       });
+
       await SearchHistoryController.saveSearchHistory(req.currentUser.id, queryStr, typeStr);
-      const totalPagesUser = Math.ceil(totalUsers / limitNumber);
-      const totalPagesHashtags = Math.ceil(totalHashtags / limitNumber);
+
       return sendSuccess(res, {
-        users: {
-          data: users,
-          pagination: {
-            total: totalPagesUser,
-            currentPage: pageNumber,
-            limit: limitNumber,
-          },
-        },
-        hashtags: {
-          data: hashtags,
-          pagination:{
-            total: totalPagesHashtags,
-            currentPage: pageNumber,
-            limit: limitNumber,
-          },
+        data: results,
+        pagination: {
+          total: results.length,
+          currentPage: pageNumber,
+          limit: limitNumber,
         },
       });
     } catch (error) {
       sendError(res, 500, { errorCode: 135 }, error);
     }
   }
-  
 }
 
 export default new SearchController();
