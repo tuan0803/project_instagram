@@ -7,6 +7,8 @@ import { ModelHooks } from 'sequelize/types/lib/hooks';
 import Settings from '@configs/settings';
 import MailActive from '@services/mailer';
 import fs from 'fs';
+import CommentModel from './comments';
+import CommentTagModel from './commentTags';
 
 class UserModel extends Model<UserInterface> implements UserInterface {
     public id: number;
@@ -34,16 +36,16 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             if (record.password && record.password !== record.previous('password')) {
                 const salt = bcrypt.genSaltSync();
                 record.password = bcrypt.hashSync(record.password, salt);
-            }  
+            }
         },
         async afterCreate(record) {
             record.sendMailActive();
         },
         async beforeUpdate(record, options) {
-            if(record.changed('password')){
+            if (record.changed('password')) {
                 options.validate = false;
             }
-        },     
+        },
     };
 
     static readonly scopes: ModelScopeOptions = {
@@ -97,18 +99,18 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             if (this.password !== this.passwordConfirmation) {
                 throw new ValidationErrorItem('Password confirmation does not match.', 'Validation error', 'passwordConfirmation', this.passwordConfirmation);
             }
-        },        
+        },
         async verifyNewPassword() {
             if (!this.currentPassword) return;
             if (this.currentPassword === this.password) {
                 throw new ValidationErrorItem('New password must not be the same as the current password.', 'Validation error', 'password', this.password);
             }
-          },
+        },
     };
 
     public static async generateVerificationCode(): Promise<string> {
         let code = '';
-        const codeLength = 32; 
+        const codeLength = 32;
         const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         for (let i = 0; i < codeLength; i++) {
             const randomIndex = Math.floor(Math.random() * characters.length);
@@ -124,7 +126,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
 
     public async sendMailActive() {
         const verificationCode = await UserModel.generateVerificationCode();
-        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); 
+        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
         const { email } = this;
         await UserModel.update(
             { verificationCode, verificationCodeExpiry },
@@ -152,7 +154,7 @@ class UserModel extends Model<UserInterface> implements UserInterface {
             Settings.jwtRefreshSecret,
             { expiresIn: existingRefreshExp ? Math.floor(existingRefreshExp - Date.now() / 1000) : Settings.refresh_ttl }
         );
-    
+
         return { accessToken, refreshToken };
     }
 
@@ -177,10 +179,10 @@ class UserModel extends Model<UserInterface> implements UserInterface {
     }
 
     public static associate() {
-       
+        this.hasMany(CommentTagModel, { foreignKey: 'userId' , as: 'taggedUsers'});
     }
 
-    public toJSON () {
+    public toJSON() {
         const { password, verificationCode, passwordConfirmation, verificationCodeExpiry, firstLoginDate, ...values } = this.get();
         return values;
     }

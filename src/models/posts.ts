@@ -53,7 +53,8 @@ class PostModel extends Model<PostInterface> implements PostInterface {
     });
   }
 
-  public static associate () {}
+  public static associate () {
+  }
 }
 
 export default PostModel;
