@@ -28,8 +28,41 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
   }
 
   static readonly hooks = {
+<<<<<<< HEAD
     async beforeValidate(comment) {
       await CommentModel.processCommentContent(comment);
+=======
+    async afterFind(comments: CommentModel) {
+      if (!comments) return;
+      const commentList = Array.isArray(comments) ? comments : [comments];
+      const bannedHashtags = await BannedHashtagModel.findAll({ attributes: ['hashtag'] });
+      const bannedHashtagNames = bannedHashtags.map(h => h.hashtag.toLowerCase());
+
+      for (const comment of commentList) {
+        const hashtags = await comment.getHashtags();
+        let updatedContent = comment.content;
+        for (const hashtag of hashtags) {
+          if (!bannedHashtagNames.includes(hashtag.name.toLowerCase())) {
+            const regex = new RegExp(`#${hashtag.name}\\b`, "g");
+            updatedContent = updatedContent.replace(regex, `#${hashtag.id}`);
+          }
+        }
+
+        await comment.setDataValue('content', updatedContent);
+      }
+    },
+
+    async beforeValidate(comment) {
+      comment.content = await CommentModel.checkBannedContent(comment.content);
+      const { hashtags, taggedUserIds } = await CommentModel.extractTags(comment.content);
+      const bannedHashtags = await BannedHashtagModel.findAll({ attributes: ['hashtag'] });
+      const bannedHashtagNames = bannedHashtags.map(h => h.hashtag.toLowerCase());
+
+      const validHashtags = hashtags.filter(tag => !bannedHashtagNames.includes(tag.toLowerCase()));
+
+      comment.setDataValue('_hashtags', validHashtags);
+      comment.setDataValue('_taggedUserIds', taggedUserIds);
+>>>>>>> d454503 (fix hashtag)
     },
 
     async afterCreate(comment, options) {
@@ -41,9 +74,42 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     async beforeUpdate(comment, options) {
       const transaction = options.transaction;
       if (comment.changed("content")) {
+<<<<<<< HEAD
         await CommentModel.processCommentContent(comment);
         await CommentModel.removeTags(comment.id, transaction);
         await CommentModel.saveTags(comment, transaction);
+=======
+        comment.content = await CommentModel.checkBannedContent(comment.content || '');
+        const { hashtags, taggedUserIds } = await CommentModel.extractTags(comment.content);
+        comment.setDataValue('_hashtags', hashtags);
+        comment.setDataValue('_taggedUserIds', taggedUserIds);
+
+        await CommentHashtagModel.destroy({
+          where: { commentId: comment.id },
+          transaction,
+        });
+
+        await CommentTagModel.destroy({
+          where: { commentId: comment.id },
+          transaction,
+        });
+
+        if (hashtags.length > 0) {
+          const allHashtags = await Promise.all(
+            hashtags.map(tag =>
+              HashtagModel.findOrCreate({ where: { name: tag }, transaction })
+            )
+          );
+          await comment.setHashtags(
+            allHashtags.map(([hashtag]) => hashtag),
+            { transaction }
+          );
+        }
+
+        if (taggedUserIds.length > 0) {
+          await comment.setUsers(taggedUserIds, { transaction });
+        }
+>>>>>>> d454503 (fix hashtag)
       }
     },
 
@@ -66,6 +132,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     const bannedWords = await BannedWordModel.findAll({ attributes: ['words'] });
     let updatedContent = content;
     for (const word of bannedWords) {
+<<<<<<< HEAD
       const regex = new RegExp(`\\b${word.words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
       updatedContent = updatedContent.replace(regex, '***');
     }
@@ -114,6 +181,12 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
       where: { commentId },
       transaction,
     });
+=======
+      const regex = new RegExp(`\\b${word.words}\\b`, 'gi');
+      updatedContent = updatedContent.replace(regex, '***');
+    }
+    return updatedContent;
+>>>>>>> d454503 (fix hashtag)
   }
 
   static readonly validations: ModelValidateOptions = {
