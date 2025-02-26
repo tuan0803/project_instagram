@@ -35,7 +35,6 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     async afterCreate(comment, options) {
       const transaction = options.transaction;
       await CommentModel.saveTags(comment, transaction);
-      await comment.save({ transaction });
     },
 
     async beforeUpdate(comment, options) {
@@ -75,24 +74,49 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
   static async processCommentContent(comment) {
     comment.content = await CommentModel.checkBannedContent(comment.content);
     const { hashtags, taggedUserIds } = await CommentModel.extractTags(comment.content);
-    comment.setDataValue('_hashtags', hashtags);
+
+    const existingHashtags = await HashtagModel.findAll({
+      where: { name: hashtags },
+      attributes: ['id', 'name'],
+    });
+
+    const bannedWords = await BannedWordModel.findAll({ attributes: ['words'] });
+    const bannedSet = new Set(bannedWords.map(bw => bw.words));
+
+    let processedContent = comment.content;
+    const newHashtags = [];
+
+    for (const tag of hashtags) {
+      if (bannedSet.has(tag)) {
+        processedContent = processedContent.replace(new RegExp(`#${tag}\\b`, 'g'), '***');
+      } else {
+        const found = existingHashtags.find(h => h.name === tag);
+        if (found) {
+          processedContent = processedContent.replace(new RegExp(`#${tag}\\b`, 'g'), `#${found.id}`);
+        } else {
+          newHashtags.push(tag);
+        }
+      }
+    }
+
+    comment.content = processedContent;
+    comment.setDataValue('_hashtags', newHashtags);
     comment.setDataValue('_taggedUserIds', taggedUserIds);
   }
-
   static async saveTags(comment, transaction) {
-    const hashtags = comment.getDataValue('_hashtags') || [];
-    if (hashtags.length > 0) {
-      const hashtagPromises = hashtags.map(async (tag) => {
-        const [hashtag, created] = await HashtagModel.findOrCreate({
-          where: { name: tag },
-          defaults: { name: tag },
-          transaction,
-        });
-        return hashtag;
-      });
-      const createdHashtags = await Promise.all(hashtagPromises);
-      await comment.setHashtags(createdHashtags, { transaction });
-      comment.content = hashtags.reduce(
+    const newHashtags = comment.getDataValue('_hashtags') || [];
+    if (newHashtags.length > 0) {
+      const createdHashtags = await Promise.all(
+        newHashtags.map(tag =>
+          HashtagModel.create({ name: tag }, { transaction })
+        )
+      );
+      await comment.setHashtags(
+        createdHashtags.map(hashtag => hashtag),
+        { transaction }
+      );
+
+      comment.content = newHashtags.reduce(
         (content, tag, index) => content.replace(new RegExp(`#${tag}\\b`, 'g'), `#${createdHashtags[index].id}`),
         comment.content
       );
@@ -123,21 +147,13 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
           new ValidationErrorItem('Nội dung bình luận không được để trống.', 'Validation error', 'content', this.content)
         ]);
       }
-
-      if (this.content.length > 8000) {
-        throw new ValidationError('Validation Error', [
-          new ValidationErrorItem('Nội dung bình luận không được vượt quá 8.000 ký tự.', 'Validation error', 'content', this.content)
-        ]);
-      }
-
       const post = await PostModel.findByPk(this.postId);
       if (!post) {
         throw new ValidationError('Validation Error', [
           new ValidationErrorItem(`ID bài viết ${this.postId} không hợp lệ.`, 'Validation error', 'postId', this.postId)
         ]);
       }
-
-      if (this.parentId !== null && this.parentId !== undefined) {
+      if (this.parentId) {
         const parentComment = await CommentModel.findByPk(this.parentId);
         if (!parentComment) {
           throw new ValidationError('Validation Error', [
