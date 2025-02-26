@@ -3,6 +3,7 @@ import PostModel from '@models/posts';
 import HashtagModel from '@models/hashtags';
 import { sendError, sendSuccess } from '@libs/response';
 import { InternalError } from '@libs/errors';
+import UserModel from '@models/users';
 
 
 
@@ -22,6 +23,11 @@ class PostController {
                 model: HashtagModel, 
                 as: 'hashtags', 
                 through: { attributes: [] }
+            },
+            {
+                model: UserModel,
+                as: 'users',
+                through: { attributes: [] },
             }
           ],
         }
