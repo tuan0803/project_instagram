@@ -90,7 +90,6 @@ class CommentController {
     try {
       const { id: commentId } = req.params;
       const userId = req.currentUser?.id;
-
       const comment = await CommentModel.findOne({ where: { id: commentId, userId } });
       if (!comment) {
         return sendError(res, 404, 'Bình luận không tồn tại');
