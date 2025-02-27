@@ -12,14 +12,28 @@ passportJwt(passport);
 import Profiles from './Profiles'
 import Users from './Users'
 import Posts from './Posts';
+import Comments from './Comments'
+import PostReactions from './PostReactions';
+import CommentReactions from './CommentReactions';
+
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
-router.use('/followers', passport.authenticate('jwt', { session: false}) ,FollowerRoutes);
 router.use('/active', Active);
 router.use('/login', Login);
-router.use('/passwords', passport.authenticate('jwt', { session: false}), Passwords)
 router.use('/me', passport.authenticate('jwt', { session: false }), Profiles);
+
+router.use('/followers', passport.authenticate('jwt', { session: false }), FollowerRoutes);
+router.use('/passwords', passport.authenticate('jwt', { session: false }), Passwords)
+
 router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 router.use('/posts', passport.authenticate('jwt', { session: false }), Posts);
+
+router.use('/comments', passport.authenticate('jwt', { session: false }), Comments);
+
+router.use('/postreactions', passport.authenticate('jwt', { session: false }), PostReactions);
+router.use('/commentreactions', passport.authenticate('jwt', { session: false }), CommentReactions);
+
+
+
 export default router;
