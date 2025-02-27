@@ -16,7 +16,6 @@ import Comments from './Comments'
 import PostReactions from './PostReactions';
 import CommentReactions from './CommentReactions';
 
-
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
 router.use('/active', Active);
@@ -33,7 +32,5 @@ router.use('/comments', passport.authenticate('jwt', { session: false }), Commen
 
 router.use('/postreactions', passport.authenticate('jwt', { session: false }), PostReactions);
 router.use('/commentreactions', passport.authenticate('jwt', { session: false }), CommentReactions);
-
-
 
 export default router;
