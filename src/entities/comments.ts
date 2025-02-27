@@ -38,11 +38,6 @@ const commentEntity = {
     type: DataTypes.DATE,
     allowNull: true,
     field: 'created_at',
-    get(): number {
-      return this.getDataValue('created_at')
-        ? DateTimeUtil.dateToMs(this.getDataValue('created_at'))
-        : null;
-    },
   },
 };
 

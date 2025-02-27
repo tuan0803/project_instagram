@@ -1,7 +1,7 @@
 import { DateTimeUtil } from '@libs/datetime';
 import { DataTypes } from 'sequelize';
 
-const commentTagEntity = {
+const CommentReactionEntity = {
     id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
@@ -9,7 +9,7 @@ const commentTagEntity = {
         primaryKey: true,
     },
     commentId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
         field: 'comment_id',
     },
@@ -25,4 +25,4 @@ const commentTagEntity = {
     },
 };
 
-export default commentTagEntity;
+export default CommentReactionEntity;

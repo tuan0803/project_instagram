@@ -7,6 +7,7 @@ import HashtagModel from './hashtags';
 import CommentHashtagModel from './commentHashtags';
 import UserModel from './users';
 import BannedWordModel from './bannedWords';
+import CommentReactionsModel from './commentReactions';
 
 class CommentModel extends Model<CommentInterface> implements CommentInterface {
   public id: number;
@@ -158,6 +159,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
     this.hasMany(CommentTagModel, { foreignKey: 'commentId', as: 'commentTags', onDelete: 'CASCADE' });
     this.belongsToMany(HashtagModel, { through: CommentHashtagModel, foreignKey: 'commentId', otherKey: 'hashtagId', as: 'hashtags' });
     this.hasMany(CommentHashtagModel, { foreignKey: 'commentId', as: 'commentHashtags', onDelete: 'CASCADE' });
+    this.hasMany(CommentReactionsModel, { foreignKey: 'comment_id', as: 'commentReactions', onDelete: 'CASCADE' });
   }
 }
 

@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import CommentModel from '@models/comments';
-import CommentHashtagModel from '@models/commentHashtags';
-import CommentTagModel from '@models/commentTags';
 import HashtagModel from '@models/hashtags';
 import UserModel from '@models/users';
+import CommentReactions from '@models/commentReactions';
 
 class CommentController {
   public async get(req: Request, res: Response) {
@@ -21,7 +20,9 @@ class CommentController {
         include: [
           { model: UserModel, attributes: ['id', 'name', 'avatar_url'], as: 'users' },
           { model: HashtagModel, as: 'hashtags' },
+          { model: CommentReactions, attributes: ['id', 'user_id', 'createdAt'], as: 'commentReactions' },
         ],
+        raw: true,
       });
 
       return sendSuccess(res, {
