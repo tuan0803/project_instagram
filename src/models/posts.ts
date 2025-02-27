@@ -5,6 +5,7 @@ import UserModel from './users';
 import PostHashtagModel from './postHashtags';
 import HashtagModel from './hashtags';
 import { ModelHooks } from 'sequelize/types/hooks';
+import PostTagUserModel from './postTagUsers';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
@@ -17,6 +18,8 @@ class PostModel extends Model<PostInterface> implements PostInterface {
     async afterValidate(post, options) {
       if (!post.text) return;
       const hashtags = post.text.match(/#(\w+)/g);
+      const taggedUserIds = post.text.match(/@(\d+)/g);
+      const userIds = taggedUserIds ? taggedUserIds.map(tag => tag.substring(1)): [];
       const hashtagNames = hashtags ? hashtags.map(tag => tag.substring(1).toLowerCase()): [];
       if (hashtagNames.length > 0) {
         const allHashtags = await Promise.all(
@@ -32,6 +35,19 @@ class PostModel extends Model<PostInterface> implements PostInterface {
         post.text = updatedText;
       } else {
         post.setDataValue('hashtags', []);
+      }
+
+      if (userIds.length > 0) {
+        const users = await UserModel.findAll({ where: { id: userIds }, attributes: ['id'] });
+        post.setDataValue('users', users);
+        let updatedText = post.text;
+        users.forEach(({ id }) => {
+          const regex = new RegExp(`@${id}\\b`, 'gi');
+          updatedText = updatedText.replace(regex, `@{{${id}}}`);
+        });
+        post.text = updatedText;
+      } else {
+        post.setDataValue('users', []);
       }
     }
   };
@@ -57,6 +73,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
 
   public static associate () {
     PostModel.belongsToMany(HashtagModel, { through: PostHashtagModel, foreignKey: 'postId', as: 'hashtags', onDelete: 'CASCADE' });
+    PostModel.belongsToMany(UserModel, { through: PostTagUserModel, foreignKey: 'postId', otherKey: 'userId', as: 'users', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
   }
 }
 
