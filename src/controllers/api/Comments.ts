@@ -22,7 +22,6 @@ class CommentController {
           { model: HashtagModel, as: 'hashtags' },
           { model: CommentReactions, attributes: ['id', 'user_id', 'createdAt'], as: 'commentReactions' },
         ],
-        raw: true,
       });
 
       return sendSuccess(res, {
@@ -94,9 +93,8 @@ class CommentController {
 
       const comment = await CommentModel.findOne({ where: { id: commentId, userId } });
       if (!comment) {
-        throw new Error('Bình luận không tồn tại hoặc bạn không có quyền xóa');
+        return sendError(res, 404, 'Bình luận không tồn tại');
       }
-
       await comment.destroy({ transaction });
       await transaction.commit();
 
