@@ -130,10 +130,35 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
         ]);
       }
 
+      if (!this.userId) {
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem('Người dùng không hợp lệ.', 'Validation error', 'userId', this.userId)
+        ]);
+      }
+      
+      const user = await UserModel.findByPk(this.userId);
+      if (!user) {
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem(`Người dùng với ID ${this.userId} không tồn tại.`, 'Validation error', 'userId', this.userId)
+        ]);
+      }
+
       const post = await PostModel.findByPk(this.postId);
       if (!post) {
         throw new ValidationError('Validation Error', [
           new ValidationErrorItem(`ID bài viết ${this.postId} không hợp lệ.`, 'Validation error', 'postId', this.postId)
+        ]);
+      }
+
+      if (!post) { 
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem(`ID bài viết ${this.postId} không hợp lệ hoặc không tồn tại.`, 'Validation error', 'postId', this.postId)
+        ]);
+      }
+      
+      if (Object.keys(post).length === 0) {
+        throw new ValidationError('Validation Error', [
+          new ValidationErrorItem(`Bài viết với ID ${this.postId} là object rỗng.`, 'Validation error', 'postId', this.postId)
         ]);
       }
 
@@ -144,7 +169,7 @@ class CommentModel extends Model<CommentInterface> implements CommentInterface {
             new ValidationErrorItem(`Bình luận cha với ID ${this.parentId} không tồn tại.`, 'Validation error', 'parentId', this.parentId)
           ]);
         }
-        if (parentComment.postId !== this.postId) {
+        if (Number(parentComment.postId) !== Number(this.postId)) {
           throw new ValidationError('Validation Error', [
             new ValidationErrorItem('Bình luận cha phải thuộc cùng bài viết.', 'Validation error', 'parentId', this.parentId)
           ]);
