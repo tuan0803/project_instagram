@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { sendError, sendSuccess } from '@libs/response';
 import SearchHistoryController from '@controllers/api/SearchHistoryController';
-import { QueryTypes } from 'sequelize';
 import sequelize from '@initializers/sequelize';
 import UserModel from '@models/users';
 import HashtagModel from '@models/hashtags';
+import { Op, QueryTypes } from 'sequelize';
+
 class SearchController {
   public async searchUsers(req: Request, res: Response) {
     try {
@@ -18,29 +19,48 @@ class SearchController {
       if (!query) {
         return sendError(res, 400, 'Query empty');
       }
-      const userTable = UserModel.tableName; 
-      const hashtagTable = HashtagModel.tableName;
-      let whereCondition = `name LIKE :query`;
-      let sqlQuery = '';
 
-      if (type === 'all') {
-        sqlQuery = `
-          (SELECT id, name, avatar_url, 'user' AS type FROM ${userTable} WHERE ${whereCondition})
+      let results: any[] = [];
+
+      if (typeStr === 'all') {
+        const userTable = UserModel.tableName;
+        const hashtagTable = HashtagModel.tableName;
+
+        const sqlQuery = `
+          (SELECT id, name, avatar_url, 'user' AS type FROM ${userTable} WHERE name LIKE :query)
           UNION
-          (SELECT id, name, NULL AS avatar_url, 'hashtag' AS type FROM ${hashtagTable} WHERE ${whereCondition})
+          (SELECT id, name, NULL AS avatar_url, 'hashtag' AS type FROM ${hashtagTable} WHERE name LIKE :query)
           ORDER BY CASE WHEN name = :query THEN 1 ELSE 2 END, name ASC
           LIMIT :limit OFFSET :offset
         `;
-      } else if (type === 'user') {
-        sqlQuery = `SELECT id, name, avatar_url, 'user' AS type FROM ${userTable} WHERE ${whereCondition} LIMIT :limit OFFSET :offset`;
-      } else if (type === 'hashtag') {
-        sqlQuery = `SELECT id, name, NULL AS avatar_url, 'hashtag' AS type FROM ${hashtagTable} WHERE ${whereCondition} LIMIT :limit OFFSET :offset`;
-      }
 
-      const results = await sequelize.query(sqlQuery, {
-        replacements: { query: `%${queryStr}%`, limit: limitNumber, offset: offset },
-        type: QueryTypes.SELECT,
-      });
+        results = await sequelize.query(sqlQuery, {
+          replacements: { query: `%${queryStr}%`, limit: limitNumber, offset: offset },
+          type: QueryTypes.SELECT,
+        });
+
+      } else if (typeStr === 'user') {
+        results = await UserModel.findAll({
+          where: { name: { [Op.like]: `%${queryStr}%` } },
+          attributes: ['id', 'name', 'avatar_url'],
+          limit: limitNumber,
+          offset: offset,
+          raw: true,
+        });
+
+        results = results.map(user => ({ ...user, type: 'user' }));
+
+      } else if (typeStr === 'hashtag') {
+        results = await HashtagModel.findAll({
+          where: { name: { [Op.like]: `%${queryStr}%` } },
+          attributes: ['id', 'name'],
+          limit: limitNumber,
+          offset: offset,
+          raw: true,
+        });
+
+        results = results.map(hashtag => ({ ...hashtag, avatar_url: null, type: 'hashtag' }));
+      }
 
       await SearchHistoryController.saveSearchHistory(req.currentUser.id, queryStr, typeStr);
 
