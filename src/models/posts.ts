@@ -6,6 +6,7 @@ import PostHashtagModel from './postHashtags';
 import HashtagModel from './hashtags';
 import { ModelHooks } from 'sequelize/types/hooks';
 import PostTagUserModel from './postTagUsers';
+import MediaModel from './medias';
 
 class PostModel extends Model<PostInterface> implements PostInterface {
   public id: number;
@@ -74,6 +75,7 @@ class PostModel extends Model<PostInterface> implements PostInterface {
   public static associate () {
     PostModel.belongsToMany(HashtagModel, { through: PostHashtagModel, foreignKey: 'postId', as: 'hashtags', onDelete: 'CASCADE' });
     PostModel.belongsToMany(UserModel, { through: PostTagUserModel, foreignKey: 'postId', otherKey: 'userId', as: 'users', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+    PostModel.hasMany(MediaModel, { foreignKey: 'postId', as: 'media', onDelete: 'CASCADE', onUpdate: 'CASCADE', hooks: true });
   }
 }
 
