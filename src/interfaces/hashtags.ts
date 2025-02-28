@@ -1,6 +1,6 @@
-interface HashtagInterface {
-    id?: number;
+interface HastagInterface {
+    id: number;
     name: string;
-}
+};
 
-export default HashtagInterface;
+export default HastagInterface;
