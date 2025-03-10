@@ -2,6 +2,6 @@ import { Router } from 'express';
 import SearchHistoryController from '@controllers/api/SearchHistoryController';
 
 const router = Router();
-router.get('/history', SearchHistoryController.getSearchHistory);
+router.get('/search_histories', SearchHistoryController.getSearchHistory);
 
 export default router;
