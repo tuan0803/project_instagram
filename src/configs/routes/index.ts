@@ -14,6 +14,7 @@ import Users from './Users'
 import Posts from './Posts';
 import searchRoutes from './searchRoutes';
 import SearchHistory from './SearchHistory';
+import Comment from './Comment';
 
 // router.use('/users', userPassport.authenticate('jwt', { session: false }), UserRoute);
 router.use('/register', Register);
@@ -26,4 +27,5 @@ router.use('/users', passport.authenticate('jwt', { session: false }), Users);
 router.use('/posts', passport.authenticate('jwt', { session: false }), Posts);
 router.use('/search', passport.authenticate('jwt', { session: false }), searchRoutes);
 router.use('/history', passport.authenticate('jwt', { session: false }), SearchHistory);
+router.use('/comment', passport.authenticate('jwt', { session: false }), Comment);
 export default router;
